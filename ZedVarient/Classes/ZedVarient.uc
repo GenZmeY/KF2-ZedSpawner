@@ -49,7 +49,7 @@ var int NeedMoreZeds;
 var int MaxSpawns;
 var int SpawnsLeft;
 var int SpawnsDone;
- 
+
 function PostBeginPlay()
 {
 	local int i;
@@ -101,8 +101,6 @@ function PostBeginPlay()
 	SetTimer(dt,true);
 }
  
-
- 
 function Timer()
 {
 	//setup total amount multiplier
@@ -124,57 +122,63 @@ function SpawnCustomZeds()
 	local int i, j;
 	local array< class<KFPawn_Monster> > CSquad;
 	local KFSpawnVolume KFSV;
-   
-	if(!KFGT.IsWaveActive() || NeedMoreZeds<=0)
-		return;
-	   
-	for(i=0;i<LoadedCustomZeds.Length;i++)
-	{
-		if(LoadedCustomZeds[i].Wave==KFGT.WaveNum)
+
+	KFSV = KFGT.SpawnManager.GetBestSpawnVolume(CSquad);
+
+	if( !KFGT.IsWaveActive() || NeedMoreZeds<=0 || KFGT.AIAliveCount>128 || KFSV.Location==PlayerController(Owner).StartSpot.Location )
+		return;  //	Maxmonsters, ????, ?? ???? ?? 	//VSize(KFSV.Location-PlayerController(Owner).Pawn.Location)<650.f //KFSV.bNoCollisionFailForSpawn==true	
+		
+		for(i=0;i<LoadedCustomZeds.Length;i++)
 		{
-			LoadedCustomZeds[i].Delay-=dt;
-		   
-			if(LoadedCustomZeds[i].Delay<=0 && LoadedCustomZeds[i].SpawnsLeft>0 && LoadedCustomZeds[i].MaxSpawns>=0 && (LoadedCustomZeds[i].SpawnsDone<LoadedCustomZeds[i].MaxSpawns) )
+			if(LoadedCustomZeds[i].Wave==KFGT.WaveNum)
 			{
-				LoadedCustomZeds[i].Delay=LoadedCustomZeds[i].DefDelay;
+				LoadedCustomZeds[i].Delay-=dt;
 			   
-				if(FRand()<=LoadedCustomZeds[i].Probability)
+				if(LoadedCustomZeds[i].Delay<=0 && LoadedCustomZeds[i].SpawnsLeft>0 && LoadedCustomZeds[i].MaxSpawns>=0 && (LoadedCustomZeds[i].SpawnsDone<LoadedCustomZeds[i].MaxSpawns) )
 				{
-					CSquad.Length=0;
-					CSquad.AddItem(LoadedCustomZeds[i].Zed);
+					LoadedCustomZeds[i].Delay=LoadedCustomZeds[i].DefDelay;
 				   
-					KFSV = KFGT.SpawnManager.GetBestSpawnVolume(CSquad);
-				   
-					for(j=0;j<LoadedCustomZeds[i].SpawnAtOnce;j++)
+					if(FRand()<=LoadedCustomZeds[i].Probability)
 					{
-						TryToSpawnZed(KFSV.Location, LoadedCustomZeds[i].Zed); 
-						LoadedCustomZeds[i].SpawnsDone++;
-					}									  
+						CSquad.Length=0;
+						CSquad.AddItem(LoadedCustomZeds[i].Zed);
+
+						for(j=0;j<LoadedCustomZeds[i].SpawnAtOnce;j++)
+						{
+							TryToSpawnZed(KFSV.Location,LoadedCustomZeds[i].Zed);
+							LoadedCustomZeds[i].SpawnsDone++;
+						}
+					}
 				}
 			}
 		}
-	}
 }
- 
+
 function TryToSpawnZed( vector L, class<KFPawn_Monster> ZedClass )
 {
 	local KFPawn_Monster M;
 	local Controller C;
-   
-	L.z+=10;   
+
+	if( ZedClass==class'HL2Monsters.Combine_Strider' || ZedClass==class'HL2Monsters.Combine_Gunship' || ZedClass==class'HL2Monsters.Hunter_Chopper' )
+	{
+		L = KFGameInfo(WorldInfo.Game).FindPlayerStart(PlayerController(Owner),0).Location;
+		L.Y += 64;
+		L.Z += 64;
+	}
+	else L.Z += 10;
+	
 	M = Spawn(ZedClass,,,L,rot(0,0,1),,true);
-   
+  
 	if( M==None )
 		return;
    
 	C = M.Spawn(M.ControllerClass);
 	C.Possess(M,false);
-	KFGT.MyKFGRI.AIRemaining+=1;  //added
+	KFGT.MyKFGRI.AIRemaining+=1;	//added
 	KFGT.NumAISpawnsQueued++;
 	KFGT.AIAliveCount++;
 	KFGT.RefreshMonsterAliveCount();
 	NeedMoreZeds--;
-	
 }
  
 //Kill original boss
@@ -182,7 +186,7 @@ function TryToSpawnZed( vector L, class<KFPawn_Monster> ZedClass )
 //{
 //  if(OriginalBoss!=None)
 //  {
-//	  OriginalBoss.Suicide();	
+//	  OriginalBoss.Suicide();
 //	  SetTimer(1, false, 'ResetCamera');
 //  }
 //}
@@ -278,7 +282,7 @@ function bool TryToSpawnBoss( Pawn A, class<KFPawn_Monster> MC )
 	E.Y = E.X;
 	E.Z = A.GetCollisionHeight()*0.8;
 	V=A.Location;
-	V.Z+=32;
+	V.Z+=32; //32
    
 	if(FRand()>0.5)
 		V.X+= FRand()>0.5 ? 100 : -100;
