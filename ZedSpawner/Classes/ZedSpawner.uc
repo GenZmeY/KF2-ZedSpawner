@@ -1,12 +1,12 @@
 class ZedSpawner extends Info
 	config(ZedSpawner);
 
-var const int dt;
+const dt = 1;
 
-var const class<Spawn>                 CfgSpawn;
-var const class<SpawnList>             CfgSpawnList;
-var const class<SpawnListBossWaves>    CfgSpawnListBW;
-var const class<SpawnListSpecialWaves> CfgSpawnListSW;
+const CfgSpawn        = class'Spawn';
+const CfgSpawnList    = class'SpawnList';
+const CfgSpawnListBW  = class'SpawnListBossWaves';
+const CfgSpawnListSW  = class'SpawnListSpecialWaves';
 
 enum E_LogLevel
 {
@@ -46,6 +46,8 @@ var private Array<S_SpawnEntry> SpawnListSW;
 var private KFGameInfo_Survival KFGIS;
 var private KFGameInfo_Endless  KFGIE;
 
+var private KFGI_Access KFGIA;
+
 var private int CurrentWave;
 var private int CurrentCycle;
 var private int CycleWaveShift;
@@ -57,6 +59,7 @@ var private class<KFPawn_Monster> CurrentBossClass;
 var private String SpawnTimerLastMessage;
 
 var private Array<class<KFPawn_Monster> > BossClassCache;
+var private Array<class<KFPawn_Monster> > CustomZeds;
 
 event PostBeginPlay()
 {
@@ -116,25 +119,57 @@ private function Init()
 		return;
 	}
 	
+	KFGIA = new(KFGIS) class'KFGI_Access';
+	
 	KFGIE = KFGameInfo_Endless(KFGIS);
 	
 	SpawnList = CfgSpawnList.static.Load(LogLevel);
 	SpawnListBW = CfgSpawnListBW.static.Load(LogLevel);
 	SpawnListSW = CfgSpawnListSW.static.Load(KFGIE, LogLevel);
 	
-	foreach SpawnListBW(SpawnEntry)
-		BossClassCache.AddItem(SpawnEntry.BossClass);
-	
 	CurrentCycle = 1;
 	CycleWaveSize = 0;
 	CycleWaveShift = MaxInt;
 	foreach SpawnList(SpawnEntry)
 	{
+		if (CustomZeds.Find(SpawnEntry.ZedClass) == INDEX_NONE
+		&&  KFGIA.IsCustomZed(SpawnEntry.ZedClass))
+		{
+			`ZS_Debug("Add custom zed:" @ SpawnEntry.ZedClass, LogLevel);
+			CustomZeds.AddItem(SpawnEntry.ZedClass);
+			SpawnEntry.ZedClass.static.PreloadContent();
+		}
+		
 		CycleWaveShift = Min(CycleWaveShift, SpawnEntry.Wave);
 		CycleWaveSize  = Max(CycleWaveSize, SpawnEntry.Wave);
 	}
 	CycleWaveSize = CycleWaveSize - CycleWaveShift + 1;
-
+	
+	foreach SpawnListBW(SpawnEntry)
+	{
+		if (CustomZeds.Find(SpawnEntry.ZedClass) == INDEX_NONE
+		&&  KFGIA.IsCustomZed(SpawnEntry.ZedClass))
+		{
+			`ZS_Debug("Add custom zed:" @ SpawnEntry.ZedClass, LogLevel);
+			CustomZeds.AddItem(SpawnEntry.ZedClass);
+			SpawnEntry.ZedClass.static.PreloadContent();
+		}
+		
+		if (BossClassCache.Find(SpawnEntry.BossClass) == INDEX_NONE)
+			BossClassCache.AddItem(SpawnEntry.BossClass);
+	}
+	
+	foreach SpawnListSW(SpawnEntry)
+	{
+		if (CustomZeds.Find(SpawnEntry.ZedClass) == INDEX_NONE
+		&&  KFGIA.IsCustomZed(SpawnEntry.ZedClass))
+		{
+			`ZS_Debug("Add custom zed:" @ SpawnEntry.ZedClass, LogLevel);
+			CustomZeds.AddItem(SpawnEntry.ZedClass);
+			SpawnEntry.ZedClass.static.PreloadContent();
+		}
+	}
+	
 	SetTimer(float(dt), true, nameof(SpawnTimer));
 }
 
@@ -529,6 +564,8 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int SpawnAtOnce, b
 
 private function PrintSpawnEntry(S_SpawnEntry SE)
 {
+	`ZS_Trace(`Location, LogLevel);
+	
 	`ZS_Debug("BossClass:" @ SE.BossClass, LogLevel);
 	`ZS_Debug("ZedClass:" @ SE.ZedClass, LogLevel);
 	`ZS_Debug("Wave:" @ SE.Wave, LogLevel);
@@ -541,12 +578,26 @@ private function PrintSpawnEntry(S_SpawnEntry SE)
 	`ZS_Debug("---------------------", LogLevel);
 }
 
+public function NotifyLogin(Controller C)
+{
+	local ZedSpawnerRepLink RepLink;
+	
+	`ZS_Trace(`Location, LogLevel);
+	
+	RepLink = Spawn(class'ZedSpawnerRepLink', C);
+	RepLink.LogLevel = LogLevel;
+	RepLink.CustomZeds = CustomZeds;
+	RepLink.ServerSync();
+}
+
+public function NotifyLogout(Controller C)
+{
+	`ZS_Trace(`Location, LogLevel);
+	
+	return;
+}
+
 DefaultProperties
 {
-	dt = 1
-	
-	CfgSpawn        = class'Spawn'
-	CfgSpawnList    = class'SpawnList'
-	CfgSpawnListBW  = class'SpawnListBossWaves'
-	CfgSpawnListSW  = class'SpawnListSpecialWaves'
+
 }

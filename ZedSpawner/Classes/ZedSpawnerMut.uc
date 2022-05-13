@@ -38,6 +38,20 @@ public function AddMutator(Mutator Mut)
 		Super.AddMutator(Mut);
 }
 
+function NotifyLogin(Controller C)
+{
+	Super.NotifyLogin(C);
+	
+	ZS.NotifyLogin(C);
+}
+
+function NotifyLogout(Controller C)
+{
+	Super.NotifyLogout(C);
+	
+	ZS.NotifyLogout(C);
+}
+
 DefaultProperties
 {
 
