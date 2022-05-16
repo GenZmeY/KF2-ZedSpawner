@@ -8,8 +8,8 @@ struct S_SpawnEntryCfg
 	var String  ZedClass;
 	var int     Delay;
 	var int     Probability;
-	var int     SpawnAtOnce;
-	var int     MaxSpawns;
+	var int     SpawnCountBase;
+	var int     SingleSpawnLimit;
 	var bool    bSpawnAtPlayerStart;
 };
 
@@ -26,10 +26,10 @@ public static function InitConfig()
 	
 	SpawnEntry.BossClass           = "KFGameContent.KFPawn_ZedFleshpoundKing";
 	SpawnEntry.ZedClass            = "SomePackage.SomeFleshpoundClass";
-	SpawnEntry.SpawnAtOnce         = 1;
-	SpawnEntry.MaxSpawns           = 1;
+	SpawnEntry.SpawnCountBase      = 2;
+	SpawnEntry.SingleSpawnLimit    = 1;
 	SpawnEntry.Delay               = 60;
-	SpawnEntry.Probability         = 1;
+	SpawnEntry.Probability         = 100;
 	SpawnEntry.bSpawnAtPlayerStart = false;
 	default.Spawn.AddItem(SpawnEntry);
 	
@@ -63,10 +63,12 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 			Errors = true;
 		}
 		
-		SpawnEntry.SpawnAtOnce = SpawnEntryCfg.SpawnAtOnce;
-		if (SpawnEntry.SpawnAtOnce <= 0)
+		SpawnEntry.RelativeStartDefault = 0.f;
+		
+		SpawnEntry.DelayDefault = SpawnEntryCfg.Delay;
+		if (SpawnEntryCfg.Delay <= 0)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "SpawnAtOnce" @ "(" $ SpawnEntryCfg.SpawnAtOnce $ ")" @ "must be greater than 0", LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "Delay" @ "(" $ SpawnEntryCfg.Delay $ ")" @ "must be greater than 0", LogLevel);
 			Errors = true;
 		}
 		
@@ -76,20 +78,18 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 			`ZS_Warn("[" $ Line + 1 $ "]" @ "Probability" @ "(" $ SpawnEntryCfg.Probability $ ")" @ "must be greater than 0 and less than or equal 100", LogLevel);
 			Errors = true;
 		}
-		
-		SpawnEntry.RelativeDelayDefault = 0.f;
-		
-		SpawnEntry.DelayDefault = SpawnEntryCfg.Delay;
-		if (SpawnEntryCfg.Delay <= 0)
+
+		SpawnEntry.SpawnCountBase = SpawnEntryCfg.SpawnCountBase;
+		if (SpawnEntry.SpawnCountBase <= 0)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Delay" @ "(" $ SpawnEntryCfg.Delay $ ")" @ "must be greater than 0", LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "SpawnCountBase" @ "(" $ SpawnEntryCfg.SpawnCountBase $ ")" @ "must be greater than 0", LogLevel);
 			Errors = true;
 		}
 		
-		SpawnEntry.MaxSpawns = SpawnEntryCfg.MaxSpawns;
-		if (SpawnEntryCfg.Delay <= 0)
+		SpawnEntry.SingleSpawnLimitDefault = SpawnEntryCfg.SingleSpawnLimit;
+		if (SpawnEntry.SingleSpawnLimit < 0)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "MaxSpawns" @ "(" $ SpawnEntryCfg.MaxSpawns $ ")" @ "must be greater than 0", LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "SingleSpawnLimit" @ "(" $ SpawnEntryCfg.SingleSpawnLimit $ ")" @ "must be equal or greater than 0", LogLevel);
 			Errors = true;
 		}
 		

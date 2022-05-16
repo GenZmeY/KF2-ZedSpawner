@@ -1,4 +1,4 @@
-class SpawnList extends Object
+class SpawnListRegular extends Object
 	dependson(ZedSpawner)
 	config(ZedSpawner);
 
@@ -6,11 +6,11 @@ struct S_SpawnEntryCfg
 {
 	var int     Wave;
 	var String  ZedClass;
-	var int     RelativeDelay;
+	var int     RelativeStart;
 	var int     Delay;
 	var int     Probability;
-	var int     SpawnAtOnce;
-	var int     MaxSpawns;
+	var int     SpawnCountBase;
+	var int     SingleSpawnLimit;
 	var bool    bSpawnAtPlayerStart;
 };
 
@@ -24,9 +24,9 @@ public static function InitConfig()
 	
 	SpawnEntry.Wave                = 1;
 	SpawnEntry.ZedClass            = "SomePackage.SomeZedClass1";
-	SpawnEntry.SpawnAtOnce         = 1;
-	SpawnEntry.MaxSpawns           = 1;
-	SpawnEntry.RelativeDelay       = 0;
+	SpawnEntry.SpawnCountBase      = 2;
+	SpawnEntry.SingleSpawnLimit    = 1;
+	SpawnEntry.RelativeStart       = 0;
 	SpawnEntry.Delay               = 60;
 	SpawnEntry.Probability         = 100;
 	SpawnEntry.bSpawnAtPlayerStart = false;
@@ -34,9 +34,9 @@ public static function InitConfig()
 	
 	SpawnEntry.Wave                = 2;
 	SpawnEntry.ZedClass            = "SomePackage.SomeZedClass2";
-	SpawnEntry.SpawnAtOnce         = 2;
-	SpawnEntry.MaxSpawns           = 4;
-	SpawnEntry.RelativeDelay       = 0;
+	SpawnEntry.SpawnCountBase      = 2;
+	SpawnEntry.SingleSpawnLimit    = 1;
+	SpawnEntry.RelativeStart       = 25;
 	SpawnEntry.Delay               = 30;
 	SpawnEntry.Probability         = 50;
 	SpawnEntry.bSpawnAtPlayerStart = false;
@@ -58,13 +58,6 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 	{
 		Errors = false;
 		
-		SpawnEntry.ZedClass = class<KFPawn_Monster>(DynamicLoadObject(SpawnEntryCfg.ZedClass, class'Class'));
-		if (SpawnEntry.ZedClass == None)
-		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Can't load zed class:" @ SpawnEntryCfg.ZedClass, LogLevel);
-			Errors = true;
-		}
-		
 		SpawnEntry.Wave = SpawnEntryCfg.Wave;
 		if (SpawnEntryCfg.Wave <= 0 || SpawnEntryCfg.Wave > 255)
 		{
@@ -72,10 +65,24 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 			Errors = true;
 		}
 		
-		SpawnEntry.SpawnAtOnce = SpawnEntryCfg.SpawnAtOnce;
-		if (SpawnEntry.SpawnAtOnce <= 0)
+		SpawnEntry.ZedClass = class<KFPawn_Monster>(DynamicLoadObject(SpawnEntryCfg.ZedClass, class'Class'));
+		if (SpawnEntry.ZedClass == None)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "SpawnAtOnce" @ "(" $ SpawnEntryCfg.SpawnAtOnce $ ")" @ "must be greater than 0", LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "Can't load zed class:" @ SpawnEntryCfg.ZedClass, LogLevel);
+			Errors = true;
+		}
+		
+		SpawnEntry.RelativeStartDefault = SpawnEntryCfg.RelativeStart / 100.f;
+		if (SpawnEntryCfg.RelativeStart < 0 || SpawnEntryCfg.RelativeStart > 100)
+		{
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "RelativeStart" @ "(" $ SpawnEntryCfg.RelativeStart $ ")" @ "must be greater than or equal 0 and less than or equal 100", LogLevel);
+			Errors = true;
+		}
+		
+		SpawnEntry.DelayDefault = SpawnEntryCfg.Delay;
+		if (SpawnEntryCfg.Delay <= 0)
+		{
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "Delay" @ "(" $ SpawnEntryCfg.Delay $ ")" @ "must be greater than 0", LogLevel);
 			Errors = true;
 		}
 		
@@ -86,27 +93,20 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 			Errors = true;
 		}
 		
-		SpawnEntry.RelativeDelayDefault = SpawnEntryCfg.RelativeDelay / 100.f;
-		if (SpawnEntryCfg.RelativeDelay < 0 || SpawnEntryCfg.RelativeDelay > 100)
+		SpawnEntry.SpawnCountBase = SpawnEntryCfg.SpawnCountBase;
+		if (SpawnEntry.SpawnCountBase <= 0)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "RelativeDelay" @ "(" $ SpawnEntryCfg.RelativeDelay $ ")" @ "must be greater than or equal 0 and less than or equal 100", LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "SpawnCountBase" @ "(" $ SpawnEntryCfg.SpawnCountBase $ ")" @ "must be greater than 0", LogLevel);
+			Errors = true;
+		}
+		
+		SpawnEntry.SingleSpawnLimitDefault = SpawnEntryCfg.SingleSpawnLimit;
+		if (SpawnEntry.SingleSpawnLimit < 0)
+		{
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "SingleSpawnLimit" @ "(" $ SpawnEntryCfg.SingleSpawnLimit $ ")" @ "must be equal or greater than 0", LogLevel);
 			Errors = true;
 		}
 
-		SpawnEntry.DelayDefault = SpawnEntryCfg.Delay;
-		if (SpawnEntryCfg.Delay <= 0)
-		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Delay" @ "(" $ SpawnEntryCfg.Delay $ ")" @ "must be greater than 0", LogLevel);
-			Errors = true;
-		}
-		
-		SpawnEntry.MaxSpawns = SpawnEntryCfg.MaxSpawns;
-		if (SpawnEntryCfg.Delay <= 0)
-		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "MaxSpawns" @ "(" $ SpawnEntryCfg.MaxSpawns $ ")" @ "must be greater than 0", LogLevel);
-			Errors = true;
-		}
-		
 		SpawnEntry.SpawnAtPlayerStart = SpawnEntryCfg.bSpawnAtPlayerStart;
 		
 		if (!Errors)

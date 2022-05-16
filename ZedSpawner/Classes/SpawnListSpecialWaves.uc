@@ -6,11 +6,11 @@ struct S_SpawnEntryCfg
 {
 	var EAIType Wave;
 	var String  ZedClass;
-	var int     RelativeDelay;
+	var int     RelativeStart;
 	var int     Delay;
 	var int     Probability;
-	var int     SpawnAtOnce;
-	var int     MaxSpawns;
+	var int     SpawnCountBase;
+	var int     SingleSpawnLimit;
 	var bool    bSpawnAtPlayerStart;
 };
 
@@ -27,11 +27,11 @@ public static function InitConfig()
 	
 	SpawnEntry.Wave                = AT_Husk;
 	SpawnEntry.ZedClass            = "SomePackage.SomeHuskClass";
-	SpawnEntry.SpawnAtOnce         = 1;
-	SpawnEntry.MaxSpawns           = 1;
-	SpawnEntry.RelativeDelay       = 0;
+	SpawnEntry.SpawnCountBase      = 2;
+	SpawnEntry.SingleSpawnLimit    = 1;
+	SpawnEntry.RelativeStart       = 0;
 	SpawnEntry.Delay               = 60;
-	SpawnEntry.Probability         = 1;
+	SpawnEntry.Probability         = 100;
 	SpawnEntry.bSpawnAtPlayerStart = false;
 	default.Spawn.AddItem(SpawnEntry);
 	
@@ -71,24 +71,10 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 			Errors = true;
 		}
 		
-		SpawnEntry.SpawnAtOnce = SpawnEntryCfg.SpawnAtOnce;
-		if (SpawnEntry.SpawnAtOnce <= 0)
+		SpawnEntry.RelativeStartDefault = SpawnEntryCfg.RelativeStart / 100.f;
+		if (SpawnEntryCfg.RelativeStart < 0 || SpawnEntryCfg.RelativeStart > 100)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "SpawnAtOnce" @ "(" $ SpawnEntryCfg.SpawnAtOnce $ ")" @ "must be greater than 0", LogLevel);
-			Errors = true;
-		}
-		
-		SpawnEntry.Probability = SpawnEntryCfg.Probability / 100.f;
-		if (SpawnEntryCfg.Probability <= 0 || SpawnEntryCfg.Probability > 100)
-		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Probability" @ "(" $ SpawnEntryCfg.Probability $ ")" @ "must be greater than 0 and less than or equal 100", LogLevel);
-			Errors = true;
-		}
-		
-		SpawnEntry.RelativeDelayDefault = SpawnEntryCfg.RelativeDelay / 100.f;
-		if (SpawnEntryCfg.RelativeDelay < 0 || SpawnEntryCfg.RelativeDelay > 100)
-		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "RelativeDelay" @ "(" $ SpawnEntryCfg.RelativeDelay $ ")" @ "must be greater than or equal 0 and less than or equal 100", LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "RelativeStart" @ "(" $ SpawnEntryCfg.RelativeStart $ ")" @ "must be greater than or equal 0 and less than or equal 100", LogLevel);
 			Errors = true;
 		}
 		
@@ -99,13 +85,27 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 			Errors = true;
 		}
 		
-		SpawnEntry.MaxSpawns = SpawnEntryCfg.MaxSpawns;
-		if (SpawnEntryCfg.Delay <= 0)
+		SpawnEntry.Probability = SpawnEntryCfg.Probability / 100.f;
+		if (SpawnEntryCfg.Probability <= 0 || SpawnEntryCfg.Probability > 100)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "MaxSpawns" @ "(" $ SpawnEntryCfg.MaxSpawns $ ")" @ "must be greater than 0", LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "Probability" @ "(" $ SpawnEntryCfg.Probability $ ")" @ "must be greater than 0 and less than or equal 100", LogLevel);
 			Errors = true;
 		}
 		
+		SpawnEntry.SpawnCountBase = SpawnEntryCfg.SpawnCountBase;
+		if (SpawnEntry.SpawnCountBase <= 0)
+		{
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "SpawnCountBase" @ "(" $ SpawnEntryCfg.SpawnCountBase $ ")" @ "must be greater than 0", LogLevel);
+			Errors = true;
+		}
+		
+		SpawnEntry.SingleSpawnLimitDefault = SpawnEntryCfg.SingleSpawnLimit;
+		if (SpawnEntry.SingleSpawnLimit < 0)
+		{
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "SingleSpawnLimit" @ "(" $ SpawnEntryCfg.SingleSpawnLimit $ ")" @ "must be equal or greater than 0", LogLevel);
+			Errors = true;
+		}
+
 		SpawnEntry.SpawnAtPlayerStart = SpawnEntryCfg.bSpawnAtPlayerStart;
 		
 		if (!Errors)
