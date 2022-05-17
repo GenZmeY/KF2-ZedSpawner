@@ -1,10 +1,10 @@
 `define ZS_Tag 'ZedSpawner'
 
-`define ZS_Log(msg, cond)    `log(`msg `if(`cond), `cond`{endif}, `ZS_Tag)
-	
-`define ZS_Fatal(msg, level) `log("FATAL:" @ `msg, (`level >= LL_Fatal),   `ZS_Tag)
-`define ZS_Error(msg, level) `log("ERROR:" @ `msg, (`level >= LL_Error),   `ZS_Tag)
-`define ZS_Warn(msg, level)  `log("WARN:"  @ `msg, (`level >= LL_Warning), `ZS_Tag)
-`define ZS_Info(msg, level)  `log("INFO:"  @ `msg, (`level >= LL_Info),    `ZS_Tag)
-`define ZS_Debug(msg, level) `log("DEBUG:" @ `msg, (`level >= LL_Debug),   `ZS_Tag)
-`define ZS_Trace(msg, level) `log("TRACE:" @ `msg, (`level >= LL_Trace),   `ZS_Tag)
+`define ZS_Log(msg, cond) `log(`msg `if(`cond), `cond`{endif},            `ZS_Tag)
+
+`define ZS_Fatal(msg)     `log("FATAL:" @ `msg, (LogLevel >= LL_Fatal),   `ZS_Tag)
+`define ZS_Error(msg)     `log("ERROR:" @ `msg, (LogLevel >= LL_Error),   `ZS_Tag)
+`define ZS_Warn(msg)      `log("WARN:"  @ `msg, (LogLevel >= LL_Warning), `ZS_Tag)
+`define ZS_Info(msg)      `log("INFO:"  @ `msg, (LogLevel >= LL_Info),    `ZS_Tag)
+`define ZS_Debug(msg)     `log("DEBUG:" @ `msg, (LogLevel >= LL_Debug),   `ZS_Tag)
+`define ZS_Trace(msg)     `log("TRACE:" @ `msg, (LogLevel >= LL_Trace),   `ZS_Tag)

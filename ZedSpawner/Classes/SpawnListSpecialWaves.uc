@@ -26,7 +26,7 @@ public static function InitConfig()
 	default.Spawn.Length = 0;
 	
 	SpawnEntry.Wave                = AT_Husk;
-	SpawnEntry.ZedClass            = "SomePackage.SomeHuskClass";
+	SpawnEntry.ZedClass            = "SomePackage.SomeClass";
 	SpawnEntry.SpawnCountBase      = 2;
 	SpawnEntry.SingleSpawnLimit    = 1;
 	SpawnEntry.RelativeStart       = 0;
@@ -48,11 +48,11 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 	
 	if (KFGIE == None)
 	{
-		`ZS_Info("Not Endless mode, skip loading special waves", LogLevel);
+		`ZS_Info("Not Endless mode, skip loading special waves");
 		return SpawnList;
 	}
 	
-	`ZS_Info("Load special waves spawn list:", LogLevel);
+	`ZS_Info("Load special waves spawn list:");
 	foreach default.Spawn(SpawnEntryCfg, Line)
 	{
 		Errors = false;
@@ -60,49 +60,49 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 		SpawnEntry.Wave = SpawnEntryCfg.Wave;
 		if (KFGIE.SpecialWaveTypes.Find(EAIType(SpawnEntryCfg.Wave)) == INDEX_NONE)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Unknown special wave:" @ SpawnEntryCfg.Wave, LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "Unknown special wave:" @ SpawnEntryCfg.Wave);
 			Errors = true;
 		}
 		
 		SpawnEntry.ZedClass = class<KFPawn_Monster>(DynamicLoadObject(SpawnEntryCfg.ZedClass, class'Class'));
 		if (SpawnEntry.ZedClass == None)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Can't load zed class:" @ SpawnEntryCfg.ZedClass, LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "Can't load zed class:" @ SpawnEntryCfg.ZedClass);
 			Errors = true;
 		}
 		
 		SpawnEntry.RelativeStartDefault = SpawnEntryCfg.RelativeStart / 100.f;
 		if (SpawnEntryCfg.RelativeStart < 0 || SpawnEntryCfg.RelativeStart > 100)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "RelativeStart" @ "(" $ SpawnEntryCfg.RelativeStart $ ")" @ "must be greater than or equal 0 and less than or equal 100", LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "RelativeStart" @ "(" $ SpawnEntryCfg.RelativeStart $ ")" @ "must be greater than or equal 0 and less than or equal 100");
 			Errors = true;
 		}
 		
 		SpawnEntry.DelayDefault = SpawnEntryCfg.Delay;
 		if (SpawnEntryCfg.Delay <= 0)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Delay" @ "(" $ SpawnEntryCfg.Delay $ ")" @ "must be greater than 0", LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "Delay" @ "(" $ SpawnEntryCfg.Delay $ ")" @ "must be greater than 0");
 			Errors = true;
 		}
 		
 		SpawnEntry.Probability = SpawnEntryCfg.Probability / 100.f;
 		if (SpawnEntryCfg.Probability <= 0 || SpawnEntryCfg.Probability > 100)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Probability" @ "(" $ SpawnEntryCfg.Probability $ ")" @ "must be greater than 0 and less than or equal 100", LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "Probability" @ "(" $ SpawnEntryCfg.Probability $ ")" @ "must be greater than 0 and less than or equal 100");
 			Errors = true;
 		}
 		
 		SpawnEntry.SpawnCountBase = SpawnEntryCfg.SpawnCountBase;
 		if (SpawnEntry.SpawnCountBase <= 0)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "SpawnCountBase" @ "(" $ SpawnEntryCfg.SpawnCountBase $ ")" @ "must be greater than 0", LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "SpawnCountBase" @ "(" $ SpawnEntryCfg.SpawnCountBase $ ")" @ "must be greater than 0");
 			Errors = true;
 		}
 		
 		SpawnEntry.SingleSpawnLimitDefault = SpawnEntryCfg.SingleSpawnLimit;
 		if (SpawnEntry.SingleSpawnLimit < 0)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "SingleSpawnLimit" @ "(" $ SpawnEntryCfg.SingleSpawnLimit $ ")" @ "must be equal or greater than 0", LogLevel);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "SingleSpawnLimit" @ "(" $ SpawnEntryCfg.SingleSpawnLimit $ ")" @ "must be equal or greater than 0");
 			Errors = true;
 		}
 
@@ -111,7 +111,7 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 		if (!Errors)
 		{
 			SpawnList.AddItem(SpawnEntry);
-			`ZS_Info("[" $ Line + 1 $ "]" @ "Loaded successfully:" @ SpawnEntryCfg.Wave @ SpawnEntryCfg.ZedClass, LogLevel);
+			`ZS_Info("[" $ Line + 1 $ "]" @ "Loaded successfully:" @ SpawnEntryCfg.Wave @ SpawnEntryCfg.ZedClass);
 		}
 	}
 	

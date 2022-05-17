@@ -35,37 +35,37 @@ public static function bool Load(E_LogLevel LogLevel)
 	
 	if (default.ZedTotalMultiplier <= 0.f)
 	{
-		`ZS_Error("ZedTotalMultiplier" @ "(" $ default.ZedTotalMultiplier $ ")" @ "must be greater than 0.0", LogLevel);
+		`ZS_Error("ZedTotalMultiplier" @ "(" $ default.ZedTotalMultiplier $ ")" @ "must be greater than 0.0");
 		Errors = true;
 	}
 	
 	if (default.SpawnTotalPlayerMultiplier < 0.f)
 	{
-		`ZS_Error("SpawnTotalPlayerMultiplier" @ "(" $ default.SpawnTotalPlayerMultiplier $ ")" @ "must be greater than or equal 0.0", LogLevel);
+		`ZS_Error("SpawnTotalPlayerMultiplier" @ "(" $ default.SpawnTotalPlayerMultiplier $ ")" @ "must be greater than or equal 0.0");
 		Errors = true;
 	}
 	
 	if (default.SpawnTotalCycleMultiplier < 0.f)
 	{
-		`ZS_Error("SpawnTotalCycleMultiplier" @ "(" $ default.SpawnTotalCycleMultiplier $ ")" @ "must be greater than or equal 0.0", LogLevel);
+		`ZS_Error("SpawnTotalCycleMultiplier" @ "(" $ default.SpawnTotalCycleMultiplier $ ")" @ "must be greater than or equal 0.0");
 		Errors = true;
 	}
 	
 	if (default.SingleSpawnLimitPlayerMultiplier < 0.f)
 	{
-		`ZS_Error("SingleSpawnLimitPlayerMultiplier" @ "(" $ default.SingleSpawnLimitPlayerMultiplier $ ")" @ "must be greater than or equal 0.0", LogLevel);
+		`ZS_Error("SingleSpawnLimitPlayerMultiplier" @ "(" $ default.SingleSpawnLimitPlayerMultiplier $ ")" @ "must be greater than or equal 0.0");
 		Errors = true;
 	}
 	
 	if (default.SingleSpawnLimitCycleMultiplier < 0.f)
 	{
-		`ZS_Error("SingleSpawnLimitCycleMultiplier" @ "(" $ default.SingleSpawnLimitCycleMultiplier $ ")" @ "must be greater than or equal 0.0", LogLevel);
+		`ZS_Error("SingleSpawnLimitCycleMultiplier" @ "(" $ default.SingleSpawnLimitCycleMultiplier $ ")" @ "must be greater than or equal 0.0");
 		Errors = true;
 	}
 	
 	if (default.AliveSpawnLimit < 0)
 	{
-		`ZS_Error("AliveSpawnLimit" @ "(" $ default.AliveSpawnLimit $ ")" @ "must be greater than or equal 0", LogLevel);
+		`ZS_Error("AliveSpawnLimit" @ "(" $ default.AliveSpawnLimit $ ")" @ "must be greater than or equal 0");
 		Errors = true;
 	}
 	

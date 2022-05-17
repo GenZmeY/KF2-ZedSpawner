@@ -12,9 +12,9 @@ replication
 
 public reliable client function ClientSync(class<KFPawn_Monster> CustomZed)
 {
-	`ZS_Trace(`Location, LogLevel);
+	`ZS_Trace(`Location);
 	
-	`ZS_Debug("Received:" @ CustomZed, LogLevel);
+	`ZS_Debug("Received:" @ CustomZed);
 	CustomZeds.AddItem(CustomZed);
 	ServerSync();
 }
@@ -23,11 +23,11 @@ public reliable client function SyncFinished()
 {
 	local class<KFPawn_Monster> CustomZed;
 	
-	`ZS_Trace(`Location, LogLevel);
+	`ZS_Trace(`Location);
 	
 	foreach CustomZeds(CustomZed)
 	{
-		`ZS_Debug("Preload Content for" @ CustomZed, LogLevel);
+		`ZS_Debug("Preload Content for" @ CustomZed);
 		CustomZed.static.PreloadContent();
 	}
 	
@@ -36,17 +36,17 @@ public reliable client function SyncFinished()
 
 public reliable server function ServerSync()
 {
-	`ZS_Trace(`Location, LogLevel);
+	`ZS_Trace(`Location);
 	
 	if (CustomZeds.Length == Recieved)
 	{
-		`ZS_Debug("Sync finished", LogLevel);
+		`ZS_Debug("Sync finished");
 		SyncFinished();
 		Destroy();
 	}
 	else
 	{
-		`ZS_Debug("Sync:" @ CustomZeds[Recieved], LogLevel);
+		`ZS_Debug("Sync:" @ CustomZeds[Recieved]);
 		ClientSync(CustomZeds[Recieved++]);
 	}
 }
