@@ -1,12 +1,11 @@
-class SpawnListSpecialWaves extends Object
+class Config_SpawnListBossWaves extends Object
 	dependson(ZedSpawner)
 	config(ZedSpawner);
 
 struct S_SpawnEntryCfg
 {
-	var EAIType Wave;
+	var String  BossClass;
 	var String  ZedClass;
-	var int     RelativeStart;
 	var int     Delay;
 	var int     Probability;
 	var int     SpawnCountBase;
@@ -25,20 +24,23 @@ public static function InitConfig()
 	
 	default.Spawn.Length = 0;
 	
-	SpawnEntry.Wave                = AT_Husk;
+	SpawnEntry.BossClass           = "KFGameContent.KFPawn_ZedFleshpoundKing";
 	SpawnEntry.ZedClass            = "SomePackage.SomeClass";
 	SpawnEntry.SpawnCountBase      = 2;
 	SpawnEntry.SingleSpawnLimit    = 1;
-	SpawnEntry.RelativeStart       = 0;
 	SpawnEntry.Delay               = 60;
 	SpawnEntry.Probability         = 100;
 	SpawnEntry.bSpawnAtPlayerStart = false;
 	default.Spawn.AddItem(SpawnEntry);
 	
+	// TODO:
+	//SpawnEntry.BossClass           = "KFGameContent.KFPawn_ZedFleshpoundKing";
+	//default.Spawn.AddItem(SpawnEntry);
+	
 	StaticSaveConfig();
 }
 
-public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogLevel LogLevel)
+public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 {
 	local Array<S_SpawnEntry> SpawnList;
 	local S_SpawnEntryCfg     SpawnEntryCfg;
@@ -46,21 +48,15 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 	local int                 Line;
 	local bool                Errors;
 	
-	if (KFGIE == None)
-	{
-		`ZS_Info("Not Endless mode, skip loading special waves");
-		return SpawnList;
-	}
-	
-	`ZS_Info("Load special waves spawn list:");
+	`ZS_Info("Load boss waves spawn list:");
 	foreach default.Spawn(SpawnEntryCfg, Line)
 	{
 		Errors = false;
 		
-		SpawnEntry.Wave = SpawnEntryCfg.Wave;
-		if (KFGIE.SpecialWaveTypes.Find(EAIType(SpawnEntryCfg.Wave)) == INDEX_NONE)
+		SpawnEntry.BossClass = class<KFPawn_Monster>(DynamicLoadObject(SpawnEntryCfg.BossClass, class'Class'));
+		if (SpawnEntry.BossClass == None)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Unknown special wave:" @ SpawnEntryCfg.Wave);
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "Can't load boss class:" @ SpawnEntryCfg.BossClass);
 			Errors = true;
 		}
 		
@@ -71,12 +67,7 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 			Errors = true;
 		}
 		
-		SpawnEntry.RelativeStartDefault = SpawnEntryCfg.RelativeStart / 100.f;
-		if (SpawnEntryCfg.RelativeStart < 0 || SpawnEntryCfg.RelativeStart > 100)
-		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "RelativeStart" @ "(" $ SpawnEntryCfg.RelativeStart $ ")" @ "must be greater than or equal 0 and less than or equal 100");
-			Errors = true;
-		}
+		SpawnEntry.RelativeStartDefault = 0.f;
 		
 		SpawnEntry.DelayDefault = SpawnEntryCfg.Delay;
 		if (SpawnEntryCfg.Delay <= 0)
@@ -91,7 +82,7 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 			`ZS_Warn("[" $ Line + 1 $ "]" @ "Probability" @ "(" $ SpawnEntryCfg.Probability $ ")" @ "must be greater than 0 and less than or equal 100");
 			Errors = true;
 		}
-		
+
 		SpawnEntry.SpawnCountBase = SpawnEntryCfg.SpawnCountBase;
 		if (SpawnEntry.SpawnCountBase <= 0)
 		{
@@ -105,13 +96,13 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 			`ZS_Warn("[" $ Line + 1 $ "]" @ "SingleSpawnLimit" @ "(" $ SpawnEntryCfg.SingleSpawnLimit $ ")" @ "must be equal or greater than 0");
 			Errors = true;
 		}
-
+		
 		SpawnEntry.SpawnAtPlayerStart = SpawnEntryCfg.bSpawnAtPlayerStart;
 		
 		if (!Errors)
 		{
 			SpawnList.AddItem(SpawnEntry);
-			`ZS_Info("[" $ Line + 1 $ "]" @ "Loaded successfully:" @ SpawnEntryCfg.Wave @ SpawnEntryCfg.ZedClass);
+			`ZS_Info("[" $ Line + 1 $ "]" @ "Loaded successfully:" @ SpawnEntryCfg.BossClass @ SpawnEntryCfg.ZedClass);
 		}
 	}
 	

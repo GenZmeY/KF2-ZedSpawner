@@ -1,10 +1,10 @@
-class SpawnListRegular extends Object
+class Config_SpawnListSpecialWaves extends Object
 	dependson(ZedSpawner)
 	config(ZedSpawner);
 
 struct S_SpawnEntryCfg
 {
-	var int     Wave;
+	var EAIType Wave;
 	var String  ZedClass;
 	var int     RelativeStart;
 	var int     Delay;
@@ -14,16 +14,19 @@ struct S_SpawnEntryCfg
 	var bool    bSpawnAtPlayerStart;
 };
 
+var config bool bStopRegularSpawn;
 var config Array<S_SpawnEntryCfg> Spawn;
 
 public static function InitConfig()
 {
 	local S_SpawnEntryCfg SpawnEntry;
 	
+	default.bStopRegularSpawn = true;
+	
 	default.Spawn.Length = 0;
 	
-	SpawnEntry.Wave                = 1;
-	SpawnEntry.ZedClass            = "SomePackage.SomeZedClass1";
+	SpawnEntry.Wave                = AT_Husk;
+	SpawnEntry.ZedClass            = "SomePackage.SomeClass";
 	SpawnEntry.SpawnCountBase      = 2;
 	SpawnEntry.SingleSpawnLimit    = 1;
 	SpawnEntry.RelativeStart       = 0;
@@ -32,20 +35,10 @@ public static function InitConfig()
 	SpawnEntry.bSpawnAtPlayerStart = false;
 	default.Spawn.AddItem(SpawnEntry);
 	
-	SpawnEntry.Wave                = 2;
-	SpawnEntry.ZedClass            = "SomePackage.SomeZedClass2";
-	SpawnEntry.SpawnCountBase      = 2;
-	SpawnEntry.SingleSpawnLimit    = 1;
-	SpawnEntry.RelativeStart       = 25;
-	SpawnEntry.Delay               = 30;
-	SpawnEntry.Probability         = 50;
-	SpawnEntry.bSpawnAtPlayerStart = false;
-	default.Spawn.AddItem(SpawnEntry);
-	
 	StaticSaveConfig();
 }
 
-public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
+public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogLevel LogLevel)
 {
 	local Array<S_SpawnEntry> SpawnList;
 	local S_SpawnEntryCfg     SpawnEntryCfg;
@@ -53,15 +46,21 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 	local int                 Line;
 	local bool                Errors;
 	
-	`ZS_Info("Load spawn list:");
+	if (KFGIE == None)
+	{
+		`ZS_Info("Not Endless mode, skip loading special waves");
+		return SpawnList;
+	}
+	
+	`ZS_Info("Load special waves spawn list:");
 	foreach default.Spawn(SpawnEntryCfg, Line)
 	{
 		Errors = false;
 		
 		SpawnEntry.Wave = SpawnEntryCfg.Wave;
-		if (SpawnEntryCfg.Wave <= 0 || SpawnEntryCfg.Wave > 255)
+		if (KFGIE.SpecialWaveTypes.Find(EAIType(SpawnEntryCfg.Wave)) == INDEX_NONE)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Wave" @ "(" $ SpawnEntryCfg.ZedClass $ ")" @ "must be greater than 0 and less than 256");
+			`ZS_Warn("[" $ Line + 1 $ "]" @ "Unknown special wave:" @ SpawnEntryCfg.Wave);
 			Errors = true;
 		}
 		

@@ -1,4 +1,4 @@
-class Spawn extends Object
+class Config_Spawner extends Object
 	dependson(ZedSpawner)
 	config(ZedSpawner);
 

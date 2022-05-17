@@ -3,22 +3,19 @@ class ZedSpawner extends Info
 
 const dt = 1;
 
-const CfgSpawn        = class'Spawn';
-const CfgSpawnListR   = class'SpawnListRegular';
-const CfgSpawnListBW  = class'SpawnListBossWaves';
-const CfgSpawnListSW  = class'SpawnListSpecialWaves';
+const CfgSpawn         = class'Config_Spawner';
+const CfgSpawnListR    = class'Config_SpawnListRegular';
+const CfgSpawnListBW   = class'Config_SpawnListBossWaves';
+const CfgSpawnListSW   = class'Config_SpawnListSpecialWaves';
+const CfgSpawnManagerE = class'Config_SpawnManager_Endless';
+const CfgSpawnManagerS = class'Config_SpawnManager_Short';
+const CfgSpawnManagerN = class'Config_SpawnManager_Normal';
+const CfgSpawnManagerL = class'Config_SpawnManager_Long';
 
-enum E_LogLevel
-{
-	LL_WrongLevel,
-	LL_Fatal,
-	LL_Error,
-	LL_Warning,
-	LL_Info,
-	LL_Debug,
-	LL_Trace,
-	LL_All
-};
+const SpawnManagerS    = class'AISpawnManager_Short';
+const SpawnManagerN    = class'AISpawnManager_Normal';
+const SpawnManagerL    = class'AISpawnManager_Long';
+const SpawnManagerE    = class'AISpawnManager_Endless';
 
 struct S_SpawnEntry
 {
@@ -66,6 +63,192 @@ var private Array<class<KFPawn_Monster> > CustomZeds;
 
 delegate bool WaveCondition(S_SpawnEntry SE);
 
+event PreBeginPlay()
+{
+	`ZS_Trace(`Location);
+	
+	Super.PreBeginPlay();
+	
+	PreInit();
+}
+
+event PostBeginPlay()
+{
+	`ZS_Trace(`Location);
+	
+	if (bPendingDelete) return;
+	
+	Super.PostBeginPlay();
+	
+	PostInit();
+}
+
+private function PreInit()
+{
+	`ZS_Trace(`Location);
+	
+	if (WorldInfo.NetMode == NM_Client)
+	{
+		`ZS_Fatal("NetMode == NM_Client, Destroy...");
+		Destroy();
+		return;
+	}
+	
+	if (!bConfigInitialized)
+	{
+		bConfigInitialized = true;
+		LogLevel = LL_Info;
+		SaveConfig();
+		CfgSpawn.static.InitConfig();
+		CfgSpawnListR.static.InitConfig();
+		CfgSpawnListBW.static.InitConfig();
+		CfgSpawnListSW.static.InitConfig();
+		CfgSpawnManagerS.static.InitConfig();
+		CfgSpawnManagerN.static.InitConfig();
+		CfgSpawnManagerL.static.InitConfig();
+		CfgSpawnManagerE.static.InitConfig();
+		`ZS_Info("Config initialized.");
+	}
+	
+	CfgSpawnManagerS.static.InitConfig();
+	CfgSpawnManagerN.static.InitConfig();
+	CfgSpawnManagerL.static.InitConfig();
+	CfgSpawnManagerE.static.InitConfig();
+
+	if (LogLevel == LL_WrongLevel)
+	{
+		LogLevel = LL_Info;
+		`ZS_Warn("Wrong 'LogLevel', return to default value");
+		SaveConfig();
+	}
+	
+	`ZS_Log("LogLevel:" @ LogLevel);
+	
+	if (!CfgSpawn.static.Load(LogLevel))
+	{
+		`ZS_Fatal("Wrong settings, Destroy...");
+		Destroy();
+		return;
+	}
+}
+
+private function PostInit()
+{
+	local S_SpawnEntry SE;
+	local bool NeedInitSM;
+	
+	`ZS_Trace(`Location);
+	
+	CurrentWave = INDEX_NONE;
+	KFGIS = KFGameInfo_Survival(WorldInfo.Game);
+	if (KFGIS == None)
+	{
+		`ZS_Fatal("Incompatible gamemode:" @ WorldInfo.Game $ ". Destroy...");
+		Destroy();
+		return;
+	}
+	
+	KFGIA = new(KFGIS) class'KFGI_Access';
+	KFGIE = KFGameInfo_Endless(KFGIS);
+	
+	SpawnListR  = CfgSpawnListR.static.Load(LogLevel);
+	SpawnListBW = CfgSpawnListBW.static.Load(LogLevel);
+	SpawnListSW = CfgSpawnListSW.static.Load(KFGIE, LogLevel);
+	
+	CfgSpawnManagerE.static.Load(LogLevel);
+	CfgSpawnManagerS.static.Load(LogLevel);
+	CfgSpawnManagerN.static.Load(LogLevel);
+	CfgSpawnManagerL.static.Load(LogLevel);
+	
+	SpecialWave = INDEX_NONE;
+	CurrentCycle = 1;
+	CycleWaveSize = 0;
+	CycleWaveShift = MaxInt;
+	foreach SpawnListR(SE)
+	{
+		CycleWaveShift = Min(CycleWaveShift, SE.Wave);
+		CycleWaveSize  = Max(CycleWaveSize, SE.Wave);
+	}
+	CycleWaveSize = CycleWaveSize - CycleWaveShift + 1;
+	
+	foreach SpawnListBW(SE)
+		if (BossClassCache.Find(SE.BossClass) == INDEX_NONE)
+			BossClassCache.AddItem(SE.BossClass);
+	
+	if (true)
+	{
+		NeedInitSM = (KFGIS.SpawnManager != None);
+		KFGIS.SpawnManagerClasses.Length = 0;
+		if (KFGIE != None)
+		{
+			KFGIE.SpawnManagerClasses.AddItem(SpawnManagerE);
+		}
+		else
+		{
+			KFGIS.SpawnManagerClasses.AddItem(SpawnManagerS);
+			KFGIS.SpawnManagerClasses.AddItem(SpawnManagerN);
+			KFGIS.SpawnManagerClasses.AddItem(SpawnManagerL);
+		}
+		
+		if (NeedInitSM)
+		{
+			KFGIS.InitSpawnManager();
+		}
+		
+		`ZS_Info("SpawnManager replaced");
+	}
+	
+	PreparePreloadContent();
+	
+	if (SpawnListSW.Length > 0 || SpawnListBW.Length > 0 || SpawnListR.Length > 0)
+	{
+		SetTimer(float(dt), true, nameof(SpawnTimer));
+	}
+	else
+	{
+		`ZS_Info("Spawn timer disabled (no spawn lists)", LogLevel);
+	}
+}
+
+private function PreparePreloadContent()
+{
+	local class<KFPawn_Monster> PawnClass;
+	
+	ExtractCustomZedsFromSpawnList(SpawnListR,  CustomZeds);
+	ExtractCustomZedsFromSpawnList(SpawnListBW, CustomZeds);
+	ExtractCustomZedsFromSpawnList(SpawnListSW, CustomZeds);
+	ExtractCustomZedsFromSpawnManager(AISpawnManager(KFGIS.SpawnManager), CustomZeds);
+	
+	foreach CustomZeds(PawnClass)
+		PawnClass.static.PreloadContent();
+}
+
+private function ExtractCustomZedsFromSpawnList(Array<S_SpawnEntry> SpawnList, out Array<class<KFPawn_Monster> > Out)
+{
+	local S_SpawnEntry SE;
+	
+	foreach SpawnList(SE)
+	{
+		if (Out.Find(SE.ZedClass) == INDEX_NONE
+		&&  KFGIA.IsCustomZed(SE.ZedClass))
+		{
+			`ZS_Debug("Add custom zed:" @ SE.ZedClass);
+			Out.AddItem(SE.ZedClass);
+		}
+	}
+}
+
+private function ExtractCustomZedsFromSpawnManager(AISpawnManager SpawnManager, out Array<class<KFPawn_Monster> > Out)
+{
+	// TODO
+}
+
+private function PreloadContent(Array<class<KFPawn_Monster> > Pawns)
+{
+	local class<KFPawn_Monster> KFPM;
+	foreach Pawns(KFPM) KFPM.static.PreloadContent();
+}
+
 public function bool WaveConditionRegular(S_SpawnEntry SE)
 {
 	`ZS_Trace(`Location);
@@ -106,119 +289,6 @@ public function bool WaveConditionSpecial(S_SpawnEntry SE)
 	`ZS_Trace(`Location);
 	
 	return (SE.Wave == SpecialWave);
-}
-
-event PostBeginPlay()
-{
-	`ZS_Trace(`Location);
-	
-	Super.PostBeginPlay();
-	
-	if (WorldInfo.NetMode == NM_Client)
-	{
-		Destroy();
-		return;
-	}
-	
-	Init();
-}
-
-private function Init()
-{
-	local S_SpawnEntry SE;
-	
-	`ZS_Trace(`Location);
-	
-	if (!bConfigInitialized)
-	{
-		bConfigInitialized = true;
-		LogLevel = LL_Info;
-		SaveConfig();
-		CfgSpawn.static.InitConfig();
-		CfgSpawnListR.static.InitConfig();
-		CfgSpawnListBW.static.InitConfig();
-		CfgSpawnListSW.static.InitConfig();
-		`ZS_Info("Config initialized.");
-	}
-
-	if (LogLevel == LL_WrongLevel)
-	{
-		LogLevel = LL_Info;
-		`ZS_Warn("Wrong 'LogLevel', return to default value");
-		SaveConfig();
-	}
-	
-	`ZS_Log("LogLevel:" @ LogLevel);
-	
-	if (!CfgSpawn.static.Load(LogLevel))
-	{
-		`ZS_Fatal("Wrong settings, Destroy...");
-		Destroy();
-		return;
-	}
-
-	CurrentWave = INDEX_NONE;
-	KFGIS = KFGameInfo_Survival(WorldInfo.Game);
-	if (KFGIS == None)
-	{
-		`ZS_Fatal("Incompatible gamemode:" @ WorldInfo.Game $ ". Destroy...");
-		Destroy();
-		return;
-	}
-	
-	KFGIA = new(KFGIS) class'KFGI_Access';
-	
-	KFGIE = KFGameInfo_Endless(KFGIS);
-	
-	SpawnListR  = CfgSpawnListR.static.Load(LogLevel);
-	SpawnListBW = CfgSpawnListBW.static.Load(LogLevel);
-	SpawnListSW = CfgSpawnListSW.static.Load(KFGIE, LogLevel);
-	
-	SpecialWave = INDEX_NONE;
-	CurrentCycle = 1;
-	CycleWaveSize = 0;
-	CycleWaveShift = MaxInt;
-	foreach SpawnListR(SE)
-	{
-		if (CustomZeds.Find(SE.ZedClass) == INDEX_NONE
-		&&  KFGIA.IsCustomZed(SE.ZedClass))
-		{
-			`ZS_Debug("Add custom zed:" @ SE.ZedClass);
-			CustomZeds.AddItem(SE.ZedClass);
-			SE.ZedClass.static.PreloadContent();
-		}
-		
-		CycleWaveShift = Min(CycleWaveShift, SE.Wave);
-		CycleWaveSize  = Max(CycleWaveSize, SE.Wave);
-	}
-	CycleWaveSize = CycleWaveSize - CycleWaveShift + 1;
-	
-	foreach SpawnListBW(SE)
-	{
-		if (CustomZeds.Find(SE.ZedClass) == INDEX_NONE
-		&&  KFGIA.IsCustomZed(SE.ZedClass))
-		{
-			`ZS_Debug("Add custom zed:" @ SE.ZedClass);
-			CustomZeds.AddItem(SE.ZedClass);
-			SE.ZedClass.static.PreloadContent();
-		}
-		
-		if (BossClassCache.Find(SE.BossClass) == INDEX_NONE)
-			BossClassCache.AddItem(SE.BossClass);
-	}
-	
-	foreach SpawnListSW(SE)
-	{
-		if (CustomZeds.Find(SE.ZedClass) == INDEX_NONE
-		&&  KFGIA.IsCustomZed(SE.ZedClass))
-		{
-			`ZS_Debug("Add custom zed:" @ SE.ZedClass);
-			CustomZeds.AddItem(SE.ZedClass);
-			SE.ZedClass.static.PreloadContent();
-		}
-	}
-	
-	SetTimer(float(dt), true, nameof(SpawnTimer));
 }
 
 private function SpawnTimer()

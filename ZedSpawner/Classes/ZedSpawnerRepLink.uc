@@ -10,6 +10,8 @@ replication
 		LogLevel;
 }
 
+public simulated function bool SafeDestroy() { if (!bPendingDelete) return Destroy(); else return true; }
+
 public reliable client function ClientSync(class<KFPawn_Monster> CustomZed)
 {
 	`ZS_Trace(`Location);
@@ -31,18 +33,18 @@ public reliable client function SyncFinished()
 		CustomZed.static.PreloadContent();
 	}
 	
-	Destroy();
+	SafeDestroy();
 }
 
 public reliable server function ServerSync()
 {
 	`ZS_Trace(`Location);
 	
-	if (CustomZeds.Length == Recieved)
+	if (CustomZeds.Length == Recieved || WorldInfo.NetMode == NM_StandAlone)
 	{
 		`ZS_Debug("Sync finished");
 		SyncFinished();
-		Destroy();
+		SafeDestroy();
 	}
 	else
 	{
