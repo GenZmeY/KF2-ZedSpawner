@@ -14,7 +14,7 @@ struct S_SpawnEntryCfg
 	var bool    bSpawnAtPlayerStart;
 };
 
-var config Array<S_SpawnEntryCfg> Spawn;
+var public config Array<S_SpawnEntryCfg> Spawn;
 
 public static function InitConfig(int Version, int LatestVersion, KFGI_Access KFGIA)
 {

@@ -40,8 +40,8 @@ struct S_SpawnEntry
 	var bool  SpawnAtPlayerStart;
 };
 
-var config int        Version;
-var config E_LogLevel LogLevel;
+var private config int        Version;
+var private config E_LogLevel LogLevel;
 
 var private Array<S_SpawnEntry> SpawnListR;
 var private Array<S_SpawnEntry> SpawnListBW;
@@ -49,26 +49,24 @@ var private Array<S_SpawnEntry> SpawnListSW;
 
 var private KFGameInfo_Survival KFGIS;
 var private KFGameInfo_Endless  KFGIE;
-
-var private KFGI_Access KFGIA;
+var private KFGI_Access         KFGIA;
 
 var private int CurrentWave;
+var private int SpecialWave;
 var private int CurrentCycle;
 var private int CycleWaveShift;
 var private int CycleWaveSize;
-
 var private int WaveTotalAI;
-var private class<KFPawn_Monster> CurrentBossClass;
-var private int SpecialWave;
 
-var private String SpawnTimerLastMessage;
-
+var private class<KFPawn_Monster>         CurrentBossClass;
 var private Array<class<KFPawn_Monster> > BossClassCache;
 var private Array<class<KFPawn_Monster> > CustomZeds;
 
+var private String SpawnTimerLastMessage;
+
 delegate bool WaveCondition(S_SpawnEntry SE);
 
-event PreBeginPlay()
+public event PreBeginPlay()
 {
 	`ZS_Trace(`Location);
 	
@@ -82,7 +80,7 @@ event PreBeginPlay()
 	Super.PreBeginPlay();
 }
 
-event PostBeginPlay()
+public event PostBeginPlay()
 {
 	`ZS_Trace(`Location);
 	

@@ -2,18 +2,15 @@ class Spawn extends Object
 	dependson(ZedSpawner)
 	config(ZedSpawner);
 
-var config bool  bCyclicalSpawn;
-var config bool  bShadowSpawn;
-
-var config float ZedTotalMultiplier;
-var config float SpawnTotalPlayerMultiplier;
-var config float SpawnTotalCycleMultiplier;
-
-var config float SingleSpawnLimitMultiplier;
-var config float SingleSpawnLimitPlayerMultiplier;
-var config float SingleSpawnLimitCycleMultiplier;
-
-var config int   AliveSpawnLimit;
+var public config bool  bCyclicalSpawn;
+var public config bool  bShadowSpawn;
+var public config float ZedTotalMultiplier;
+var public config float SpawnTotalPlayerMultiplier;
+var public config float SpawnTotalCycleMultiplier;
+var public config float SingleSpawnLimitMultiplier;
+var public config float SingleSpawnLimitPlayerMultiplier;
+var public config float SingleSpawnLimitCycleMultiplier;
+var public config int   AliveSpawnLimit;
 
 public static function InitConfig(int Version, int LatestVersion)
 {

@@ -14,8 +14,8 @@ struct S_SpawnEntryCfg
 	var bool    bSpawnAtPlayerStart;
 };
 
-var config bool bStopRegularSpawn;
-var config Array<S_SpawnEntryCfg> Spawn;
+var public  config bool bStopRegularSpawn;
+var private config Array<S_SpawnEntryCfg> Spawn;
 
 public static function InitConfig(int Version, int LatestVersion)
 {
