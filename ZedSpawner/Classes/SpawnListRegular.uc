@@ -16,33 +16,46 @@ struct S_SpawnEntryCfg
 
 var config Array<S_SpawnEntryCfg> Spawn;
 
-public static function InitConfig()
+public static function InitConfig(int Version, int LatestVersion, KFGI_Access KFGIA)
+{
+	switch (Version)
+	{
+		case `NO_CONFIG:
+			ApplyDefault(KFGIA);
+			
+		default: break;
+	}
+	
+	if (LatestVersion != Version)
+	{
+		StaticSaveConfig();
+	}
+}
+
+private static function ApplyDefault(KFGI_Access KFGIA)
 {
 	local S_SpawnEntryCfg SpawnEntry;
+	local Array<class<KFPawn_Monster> > KFPM_Zeds;
+	local class<KFPawn_Monster> KFPMC;
 	
 	default.Spawn.Length = 0;
 	
-	SpawnEntry.Wave                = 1;
-	SpawnEntry.ZedClass            = "SomePackage.SomeZedClass1";
-	SpawnEntry.SpawnCountBase      = 2;
-	SpawnEntry.SingleSpawnLimit    = 1;
-	SpawnEntry.RelativeStart       = 0;
-	SpawnEntry.Delay               = 60;
-	SpawnEntry.Probability         = 100;
-	SpawnEntry.bSpawnAtPlayerStart = false;
-	default.Spawn.AddItem(SpawnEntry);
-	
-	SpawnEntry.Wave                = 2;
-	SpawnEntry.ZedClass            = "SomePackage.SomeZedClass2";
+	SpawnEntry.Wave                = 0;
 	SpawnEntry.SpawnCountBase      = 2;
 	SpawnEntry.SingleSpawnLimit    = 1;
 	SpawnEntry.RelativeStart       = 25;
-	SpawnEntry.Delay               = 30;
-	SpawnEntry.Probability         = 50;
+	SpawnEntry.Delay               = 60;
+	SpawnEntry.Probability         = 100;
 	SpawnEntry.bSpawnAtPlayerStart = false;
+	SpawnEntry.ZedClass            = "SomePackage.SomeZedClass1";
 	default.Spawn.AddItem(SpawnEntry);
-	
-	StaticSaveConfig();
+	KFPM_Zeds = KFGIA.GetAIClassList();
+	foreach KFPM_Zeds(KFPMC)
+	{
+		SpawnEntry.Wave++;
+		SpawnEntry.ZedClass = "KFGameContent." $ String(KFPMC);
+		default.Spawn.AddItem(SpawnEntry);
+	}
 }
 
 public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)

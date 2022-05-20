@@ -16,24 +16,42 @@ struct S_SpawnEntryCfg
 var config bool bStopRegularSpawn;
 var config Array<S_SpawnEntryCfg> Spawn;
 
-public static function InitConfig()
+public static function InitConfig(int Version, int LatestVersion, KFGI_Access KFGIA)
+{
+	switch (Version)
+	{
+		case `NO_CONFIG:
+			ApplyDefault(KFGIA);
+			
+		default: break;
+	}
+	
+	if (LatestVersion != Version)
+	{
+		StaticSaveConfig();
+	}
+}
+
+private static function ApplyDefault(KFGI_Access KFGIA)
 {
 	local S_SpawnEntryCfg SpawnEntry;
+	local Array<class<KFPawn_Monster> > KFPM_Bosses;
+	local class<KFPawn_Monster> KFPMC;
 	
-	default.bStopRegularSpawn = true;
-	
-	default.Spawn.Length = 0;
-	
-	SpawnEntry.BossClass           = "KFGameContent.KFPawn_ZedFleshpoundKing";
-	SpawnEntry.ZedClass            = "SomePackage.SomeFleshpoundClass";
+	default.bStopRegularSpawn      = true;
+	default.Spawn.Length           = 0;
+	SpawnEntry.ZedClass            = "SomePackage.SomeClass";
 	SpawnEntry.SpawnCountBase      = 2;
 	SpawnEntry.SingleSpawnLimit    = 1;
-	SpawnEntry.Delay               = 60;
+	SpawnEntry.Delay               = 30;
 	SpawnEntry.Probability         = 100;
 	SpawnEntry.bSpawnAtPlayerStart = false;
-	default.Spawn.AddItem(SpawnEntry);
-	
-	StaticSaveConfig();
+	KFPM_Bosses = KFGIA.GetAIBossClassList();
+	foreach KFPM_Bosses(KFPMC)
+	{
+		SpawnEntry.BossClass = "KFGameContent." $ String(KFPMC);
+		default.Spawn.AddItem(SpawnEntry);
+	}
 }
 
 public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)

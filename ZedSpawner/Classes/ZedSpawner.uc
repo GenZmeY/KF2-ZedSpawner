@@ -1,6 +1,8 @@
 class ZedSpawner extends Info
 	config(ZedSpawner);
 
+const LatestVersion = 1;
+
 const dt = 1;
 
 const CfgSpawn        = class'Spawn';
@@ -24,7 +26,7 @@ struct S_SpawnEntry
 {
 	var class<KFPawn_Monster> BossClass;
 	var class<KFPawn_Monster> ZedClass;
-	var int   Wave;
+	var byte  Wave;
 	var int   SpawnCountBase;
 	var int   SingleSpawnLimitDefault;
 	var int   SingleSpawnLimit;
@@ -38,7 +40,7 @@ struct S_SpawnEntry
 	var bool  SpawnAtPlayerStart;
 };
 
-var config bool       bConfigInitialized;
+var config int        Version;
 var config E_LogLevel LogLevel;
 
 var private Array<S_SpawnEntry> SpawnListR;
@@ -65,6 +67,169 @@ var private Array<class<KFPawn_Monster> > BossClassCache;
 var private Array<class<KFPawn_Monster> > CustomZeds;
 
 delegate bool WaveCondition(S_SpawnEntry SE);
+
+event PreBeginPlay()
+{
+	`ZS_Trace(`Location);
+	
+	if (WorldInfo.NetMode == NM_Client)
+	{
+		`ZS_Fatal("NetMode == NM_Client, Destroy...");
+		Destroy();
+		return;
+	}
+	
+	Super.PreBeginPlay();
+}
+
+event PostBeginPlay()
+{
+	`ZS_Trace(`Location);
+	
+	if (bPendingDelete) return;
+	
+	Super.PostBeginPlay();
+	
+	Init();
+}
+
+private function InitConfig()
+{
+	if (Version == `NO_CONFIG)
+	{
+		LogLevel = LL_Info;
+		SaveConfig();
+	}
+	
+	CfgSpawn.static.InitConfig(Version, LatestVersion);
+	CfgSpawnListR.static.InitConfig(Version, LatestVersion, KFGIA);
+	CfgSpawnListBW.static.InitConfig(Version, LatestVersion, KFGIA);
+	CfgSpawnListSW.static.InitConfig(Version, LatestVersion);
+	
+	switch (Version)
+	{
+		case `NO_CONFIG:
+			`ZS_Info("Config created");
+
+		case MaxInt:
+			`ZS_Info("Config updated to version"@LatestVersion);
+			break;
+			
+		case LatestVersion:
+			`ZS_Info("Config is up-to-date");
+			break;
+			
+		default:
+			`ZS_Warn("The config version is higher than the current version (are you using an old mutator?)");
+			`ZS_Warn("Config version is" @ Version @ "but current version is" @ LatestVersion);
+			`ZS_Warn("The config version will be changed to" @ LatestVersion);
+			break;
+	}
+
+	if (LatestVersion != Version)
+	{
+		Version = LatestVersion;
+		SaveConfig();
+	}
+}
+
+private function Init()
+{
+	local S_SpawnEntry SE;
+	
+	`ZS_Trace(`Location);
+	
+	KFGIS = KFGameInfo_Survival(WorldInfo.Game);
+	if (KFGIS == None)
+	{
+		`ZS_Fatal("Incompatible gamemode:" @ WorldInfo.Game $ ". Destroy...");
+		Destroy();
+		return;
+	}
+	
+	KFGIA = new(KFGIS) class'KFGI_Access';
+	KFGIE = KFGameInfo_Endless(KFGIS);
+	
+	InitConfig();
+
+	if (LogLevel == LL_WrongLevel)
+	{
+		LogLevel = LL_Info;
+		`ZS_Warn("Wrong 'LogLevel', return to default value");
+		SaveConfig();
+	}
+	`ZS_Log("LogLevel:" @ LogLevel);
+	
+	if (!CfgSpawn.static.Load(LogLevel))
+	{
+		`ZS_Fatal("Wrong settings, Destroy...");
+		Destroy();
+		return;
+	}
+
+	SpawnListR  = CfgSpawnListR.static.Load(LogLevel);
+	SpawnListBW = CfgSpawnListBW.static.Load(LogLevel);
+	SpawnListSW = CfgSpawnListSW.static.Load(KFGIE, LogLevel);
+	
+	CurrentWave = INDEX_NONE;
+	SpecialWave = INDEX_NONE;
+	CurrentCycle = 1;
+	
+	if (CfgSpawn.default.bCyclicalSpawn)
+	{
+		CycleWaveSize = 0;
+		CycleWaveShift = MaxInt;
+		foreach SpawnListR(SE)
+		{
+			CycleWaveShift = Min(CycleWaveShift, SE.Wave);
+			CycleWaveSize  = Max(CycleWaveSize, SE.Wave);
+		}
+		CycleWaveSize = CycleWaveSize - CycleWaveShift + 1;
+	}
+	
+	CreateBossCache();
+	PreloadContent();
+	
+	SetTimer(float(dt), true, nameof(SpawnTimer));
+}
+
+private function CreateBossCache()
+{
+	local S_SpawnEntry SE;
+	
+	foreach SpawnListBW(SE)
+		if (BossClassCache.Find(SE.BossClass) == INDEX_NONE)
+			BossClassCache.AddItem(SE.BossClass);
+}
+
+private function PreloadContent()
+{
+	local class<KFPawn_Monster> PawnClass;
+	
+	ExtractCustomZedsFromSpawnList(SpawnListR,  CustomZeds);
+	ExtractCustomZedsFromSpawnList(SpawnListBW, CustomZeds);
+	ExtractCustomZedsFromSpawnList(SpawnListSW, CustomZeds);
+	
+	foreach CustomZeds(PawnClass)
+	{
+		`ZS_Info("Preload content:" @ PawnClass);
+		PawnClass.static.PreloadContent();
+	}
+}
+
+private function ExtractCustomZedsFromSpawnList(Array<S_SpawnEntry> SpawnList, out Array<class<KFPawn_Monster> > Out)
+{
+	local S_SpawnEntry SE;
+	
+	foreach SpawnList(SE)
+	{
+		if (Out.Find(SE.ZedClass) == INDEX_NONE
+		&&  KFGIA.IsCustomZed(SE.ZedClass))
+		{
+			Out.AddItem(SE.ZedClass);
+		}
+	}
+}
 
 public function bool WaveConditionRegular(S_SpawnEntry SE)
 {
@@ -106,119 +271,6 @@ public function bool WaveConditionSpecial(S_SpawnEntry SE)
 	`ZS_Trace(`Location);
 	
 	return (SE.Wave == SpecialWave);
-}
-
-event PostBeginPlay()
-{
-	`ZS_Trace(`Location);
-	
-	Super.PostBeginPlay();
-	
-	if (WorldInfo.NetMode == NM_Client)
-	{
-		Destroy();
-		return;
-	}
-	
-	Init();
-}
-
-private function Init()
-{
-	local S_SpawnEntry SE;
-	
-	`ZS_Trace(`Location);
-	
-	if (!bConfigInitialized)
-	{
-		bConfigInitialized = true;
-		LogLevel = LL_Info;
-		SaveConfig();
-		CfgSpawn.static.InitConfig();
-		CfgSpawnListR.static.InitConfig();
-		CfgSpawnListBW.static.InitConfig();
-		CfgSpawnListSW.static.InitConfig();
-		`ZS_Info("Config initialized.");
-	}
-
-	if (LogLevel == LL_WrongLevel)
-	{
-		LogLevel = LL_Info;
-		`ZS_Warn("Wrong 'LogLevel', return to default value");
-		SaveConfig();
-	}
-	
-	`ZS_Log("LogLevel:" @ LogLevel);
-	
-	if (!CfgSpawn.static.Load(LogLevel))
-	{
-		`ZS_Fatal("Wrong settings, Destroy...");
-		Destroy();
-		return;
-	}
-
-	CurrentWave = INDEX_NONE;
-	KFGIS = KFGameInfo_Survival(WorldInfo.Game);
-	if (KFGIS == None)
-	{
-		`ZS_Fatal("Incompatible gamemode:" @ WorldInfo.Game $ ". Destroy...");
-		Destroy();
-		return;
-	}
-	
-	KFGIA = new(KFGIS) class'KFGI_Access';
-	
-	KFGIE = KFGameInfo_Endless(KFGIS);
-	
-	SpawnListR  = CfgSpawnListR.static.Load(LogLevel);
-	SpawnListBW = CfgSpawnListBW.static.Load(LogLevel);
-	SpawnListSW = CfgSpawnListSW.static.Load(KFGIE, LogLevel);
-	
-	SpecialWave = INDEX_NONE;
-	CurrentCycle = 1;
-	CycleWaveSize = 0;
-	CycleWaveShift = MaxInt;
-	foreach SpawnListR(SE)
-	{
-		if (CustomZeds.Find(SE.ZedClass) == INDEX_NONE
-		&&  KFGIA.IsCustomZed(SE.ZedClass))
-		{
-			`ZS_Debug("Add custom zed:" @ SE.ZedClass);
-			CustomZeds.AddItem(SE.ZedClass);
-			SE.ZedClass.static.PreloadContent();
-		}
-		
-		CycleWaveShift = Min(CycleWaveShift, SE.Wave);
-		CycleWaveSize  = Max(CycleWaveSize, SE.Wave);
-	}
-	CycleWaveSize = CycleWaveSize - CycleWaveShift + 1;
-	
-	foreach SpawnListBW(SE)
-	{
-		if (CustomZeds.Find(SE.ZedClass) == INDEX_NONE
-		&&  KFGIA.IsCustomZed(SE.ZedClass))
-		{
-			`ZS_Debug("Add custom zed:" @ SE.ZedClass);
-			CustomZeds.AddItem(SE.ZedClass);
-			SE.ZedClass.static.PreloadContent();
-		}
-		
-		if (BossClassCache.Find(SE.BossClass) == INDEX_NONE)
-			BossClassCache.AddItem(SE.BossClass);
-	}
-	
-	foreach SpawnListSW(SE)
-	{
-		if (CustomZeds.Find(SE.ZedClass) == INDEX_NONE
-		&&  KFGIA.IsCustomZed(SE.ZedClass))
-		{
-			`ZS_Debug("Add custom zed:" @ SE.ZedClass);
-			CustomZeds.AddItem(SE.ZedClass);
-			SE.ZedClass.static.PreloadContent();
-		}
-	}
-	
-	SetTimer(float(dt), true, nameof(SpawnTimer));
 }
 
 private function SpawnTimer()

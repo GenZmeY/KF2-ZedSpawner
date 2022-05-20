@@ -17,15 +17,29 @@ struct S_SpawnEntryCfg
 var config bool bStopRegularSpawn;
 var config Array<S_SpawnEntryCfg> Spawn;
 
-public static function InitConfig()
+public static function InitConfig(int Version, int LatestVersion)
+{
+	switch (Version)
+	{
+		case `NO_CONFIG:
+			ApplyDefault();
+			
+		default: break;
+	}
+	
+	if (LatestVersion != Version)
+	{
+		StaticSaveConfig();
+	}
+}
+
+private static function ApplyDefault()
 {
 	local S_SpawnEntryCfg SpawnEntry;
+	local EAIType AIType;
 	
 	default.bStopRegularSpawn = true;
-	
 	default.Spawn.Length = 0;
-	
-	SpawnEntry.Wave                = AT_Husk;
 	SpawnEntry.ZedClass            = "SomePackage.SomeClass";
 	SpawnEntry.SpawnCountBase      = 2;
 	SpawnEntry.SingleSpawnLimit    = 1;
@@ -33,9 +47,11 @@ public static function InitConfig()
 	SpawnEntry.Delay               = 60;
 	SpawnEntry.Probability         = 100;
 	SpawnEntry.bSpawnAtPlayerStart = false;
-	default.Spawn.AddItem(SpawnEntry);
-	
-	StaticSaveConfig();
+	foreach class'KFGameInfo_Endless'.default.SpecialWaveTypes(AIType)
+	{
+		SpawnEntry.Wave = AIType;
+		default.Spawn.AddItem(SpawnEntry);
+	}
 }
 
 public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogLevel LogLevel)

@@ -8,3 +8,5 @@
 `define ZS_Info(msg)      `log("INFO:"  @ `msg, (LogLevel >= LL_Info),    `ZS_Tag)
 `define ZS_Debug(msg)     `log("DEBUG:" @ `msg, (LogLevel >= LL_Debug),   `ZS_Tag)
 `define ZS_Trace(msg)     `log("TRACE:" @ `msg, (LogLevel >= LL_Trace),   `ZS_Tag)
+
+`define NO_CONFIG 0

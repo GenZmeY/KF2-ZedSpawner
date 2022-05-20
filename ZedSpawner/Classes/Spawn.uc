@@ -15,7 +15,23 @@ var config float SingleSpawnLimitCycleMultiplier;
 
 var config int   AliveSpawnLimit;
 
-public static function InitConfig()
+public static function InitConfig(int Version, int LatestVersion)
+{
+	switch (Version)
+	{
+		case `NO_CONFIG:
+			ApplyDefault();
+			
+		default: break;
+	}
+	
+	if (LatestVersion != Version)
+	{
+		StaticSaveConfig();
+	}
+}
+
+private static function ApplyDefault()
 {
 	default.bCyclicalSpawn = true;
 	default.bShadowSpawn = true;
@@ -25,8 +41,6 @@ public static function InitConfig()
 	default.SingleSpawnLimitPlayerMultiplier = 0.75;
 	default.SingleSpawnLimitCycleMultiplier = 0.75;
 	default.AliveSpawnLimit = 0;
-
-	StaticSaveConfig();
 }
 
 public static function bool Load(E_LogLevel LogLevel)
