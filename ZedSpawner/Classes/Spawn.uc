@@ -33,14 +33,15 @@ public static function InitConfig(int Version, int LatestVersion)
 
 private static function ApplyDefault()
 {
-	default.bCyclicalSpawn = true;
-	default.bShadowSpawn = true;
-	default.ZedTotalMultiplier = 1.0;
-	default.SpawnTotalPlayerMultiplier = 0.75;
-	default.SpawnTotalCycleMultiplier = 0.75;
+	default.bCyclicalSpawn                   = true;
+	default.bShadowSpawn                     = true;
+	default.ZedTotalMultiplier               = 1.0;
+	default.SpawnTotalPlayerMultiplier       = 0.75;
+	default.SpawnTotalCycleMultiplier        = 0.75;
+	default.SingleSpawnLimitMultiplier       = 1.0;
 	default.SingleSpawnLimitPlayerMultiplier = 0.75;
-	default.SingleSpawnLimitCycleMultiplier = 0.75;
-	default.AliveSpawnLimit = 0;
+	default.SingleSpawnLimitCycleMultiplier  = 0.75;
+	default.AliveSpawnLimit                  = 0;
 }
 
 public static function bool Load(E_LogLevel LogLevel)
