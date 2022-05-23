@@ -47,12 +47,11 @@ private static function ApplyDefault(KFGI_Access KFGIA)
 	SpawnEntry.Delay               = 60;
 	SpawnEntry.Probability         = 100;
 	SpawnEntry.bSpawnAtPlayerStart = false;
-	SpawnEntry.ZedClass            = "SomePackage.SomeZedClass1";
-	default.Spawn.AddItem(SpawnEntry);
+	
 	KFPM_Zeds = KFGIA.GetAIClassList();
 	foreach KFPM_Zeds(KFPMC)
 	{
-		SpawnEntry.Wave++;
+		++SpawnEntry.Wave;
 		SpawnEntry.ZedClass = "KFGameContent." $ String(KFPMC);
 		default.Spawn.AddItem(SpawnEntry);
 	}
