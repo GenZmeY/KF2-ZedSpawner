@@ -6,7 +6,7 @@ const LatestVersion = 1;
 const dt = 1;
 
 const CfgSpawn        = class'Spawn';
-const CfgSpawnListR   = class'SpawnListRegular';
+const CfgSpawnListRW  = class'SpawnListRegular';
 const CfgSpawnListBW  = class'SpawnListBossWaves';
 const CfgSpawnListSW  = class'SpawnListSpecialWaves';
 
@@ -43,9 +43,10 @@ struct S_SpawnEntry
 var private config int        Version;
 var private config E_LogLevel LogLevel;
 
-var private Array<S_SpawnEntry> SpawnListR;
+var private Array<S_SpawnEntry> SpawnListRW;
 var private Array<S_SpawnEntry> SpawnListBW;
 var private Array<S_SpawnEntry> SpawnListSW;
+var private Array<S_SpawnEntry> SpawnListCurrent;
 
 var private bool NoFreeSpawnSlots;
 var private bool UseRegularSpawnList;
@@ -106,7 +107,7 @@ private function InitConfig()
 	}
 	
 	CfgSpawn.static.InitConfig(Version, LatestVersion);
-	CfgSpawnListR.static.InitConfig(Version, LatestVersion, KFGIA);
+	CfgSpawnListRW.static.InitConfig(Version, LatestVersion, KFGIA);
 	CfgSpawnListBW.static.InitConfig(Version, LatestVersion, KFGIA);
 	CfgSpawnListSW.static.InitConfig(Version, LatestVersion);
 	
@@ -171,7 +172,7 @@ private function Init()
 		return;
 	}
 
-	SpawnListR  = CfgSpawnListR.static.Load(LogLevel);
+	SpawnListRW = CfgSpawnListRW.static.Load(LogLevel);
 	SpawnListBW = CfgSpawnListBW.static.Load(LogLevel);
 	SpawnListSW = CfgSpawnListSW.static.Load(KFGIE, LogLevel);
 	
@@ -183,7 +184,7 @@ private function Init()
 	{
 		CycleWaveSize = 0;
 		CycleWaveShift = MaxInt;
-		foreach SpawnListR(SE)
+		foreach SpawnListRW(SE)
 		{
 			CycleWaveShift = Min(CycleWaveShift, SE.Wave);
 			CycleWaveSize  = Max(CycleWaveSize, SE.Wave);
@@ -210,7 +211,7 @@ private function PreloadContent()
 {
 	local class<KFPawn_Monster> PawnClass;
 	
-	ExtractCustomZedsFromSpawnList(SpawnListR,  CustomZeds);
+	ExtractCustomZedsFromSpawnList(SpawnListRW, CustomZeds);
 	ExtractCustomZedsFromSpawnList(SpawnListBW, CustomZeds);
 	ExtractCustomZedsFromSpawnList(SpawnListSW, CustomZeds);
 	
@@ -237,15 +238,11 @@ private function ExtractCustomZedsFromSpawnList(Array<S_SpawnEntry> SpawnList, o
 
 public function bool WaveConditionRegular(S_SpawnEntry SE)
 {
-	`ZS_Trace(`Location);
-	
 	return (SE.Wave == KFGIS.WaveNum - CycleWaveSize * (CurrentCycle - 1));
 }
 
 public function bool WaveConditionBoss(S_SpawnEntry SE)
 {
-	`ZS_Trace(`Location);
-	
 	if (CurrentBossClass == None)
 		return false;
 	else
@@ -254,13 +251,15 @@ public function bool WaveConditionBoss(S_SpawnEntry SE)
 
 public function bool WaveConditionSpecial(S_SpawnEntry SE)
 {
-	`ZS_Trace(`Location);
-	
 	return (SE.Wave == SpecialWave);
 }
 
+
 private function SpawnTimer()
 {
+	local S_SpawnEntry SE;
+	local int Index;
+	
 	`ZS_Trace(`Location);
 	
 	if (KFGIS.WaveNum != 0 && CurrentWave < KFGIS.WaveNum)
@@ -292,9 +291,24 @@ private function SpawnTimer()
 	
 	SpawnTimerLogger(false, SpawnListsComment);
 
-	if (UseRegularSpawnList) SpawnZeds(SpawnListR,  WaveConditionRegular);
-	if (UseSpecialSpawnList) SpawnZeds(SpawnListSW, WaveConditionSpecial);
-	if (UseBossSpawnList)    SpawnZeds(SpawnListBW, WaveConditionBoss);
+	foreach SpawnListCurrent(SE, Index)
+	{
+		if (!ReadyToStart(SE))
+		{
+			continue;
+		}
+		
+		if (SE.Delay > 0)
+		{
+			SpawnListCurrent[Index].Delay -= dt;
+			continue;
+		}
+		
+		if (SE.SpawnsLeft > 0)
+		{
+			SpawnEntry(SpawnListCurrent, Index);
+		}
+	}
 }
 
 private function SetupWave()
@@ -350,21 +364,34 @@ private function SetupWave()
 		CurrentBossClass = None;
 	}
 	
-	ResetSpawnList(SpawnListR);
-	ResetSpawnList(SpawnListSW);
-	ResetSpawnList(SpawnListBW);
-	
 	NoFreeSpawnSlots    = false;
 	UseBossSpawnList    = KFGIS.MyKFGRI.IsBossWave();
 	UseSpecialSpawnList = (SpecialWave != INDEX_NONE);
 	UseRegularSpawnList = ((!UseSpecialSpawnList && !UseBossSpawnList)
 	|| (UseSpecialSpawnList && !CfgSpawnListSW.default.bStopRegularSpawn)
 	|| (UseBossSpawnList && !CfgSpawnListBW.default.bStopRegularSpawn));
+
+	SpawnListCurrent.Length = 0;
+	if (UseRegularSpawnList)
+	{
+		SpawnListNames.AddItem("regular");
+		FillCurrentSpawnList(SpawnListRW, WaveConditionRegular);
+	}
 	
-	if (UseRegularSpawnList) SpawnListNames.AddItem("regular");
-	if (UseSpecialSpawnList) SpawnListNames.AddItem("special");
-	if (UseBossSpawnList)    SpawnListNames.AddItem("boss");
+	if (UseSpecialSpawnList)
+	{
+		SpawnListNames.AddItem("special");
+		FillCurrentSpawnList(SpawnListSW, WaveConditionSpecial);
+	}
+	
+	if (UseBossSpawnList)
+	{
+		SpawnListNames.AddItem("boss");
+		FillCurrentSpawnList(SpawnListBW, WaveConditionBoss);
+	}
+	
 	JoinArray(SpawnListNames, SpawnListsComment, ", ");
+	ResetSpawnList(SpawnListCurrent);
 	
 	if (WaveTypeInfo != "")
 	{
@@ -372,6 +399,17 @@ private function SetupWave()
 	}
 	
 	`ZS_Info("Wave" @ CurrentWave @ WaveTypeInfo);
+}
+
+private function FillCurrentSpawnList(Array<S_SpawnEntry> SpawnList, delegate<WaveCondition> Condition)
+{
+	local S_SpawnEntry SE;
+	
+	`ZS_Trace(`Location);
+	
+	foreach SpawnList(SE)
+		if (Condition(SE))
+			SpawnListCurrent.AddItem(SE);
 }
 
 private function ResetSpawnList(out Array<S_SpawnEntry> List)
@@ -405,7 +443,7 @@ private function ResetSpawnList(out Array<S_SpawnEntry> List)
 		else
 		{
 			List[Index].RelativeStart = SE.RelativeStartDefault;
-			if (SE.RelativeStart == 0.f)
+			if (List[Index].RelativeStart == 0.f)
 				List[Index].Delay = SE.DelayDefault;
 			else
 				List[Index].Delay = 0;
@@ -436,36 +474,6 @@ private function SpawnTimerLogger(bool Stop, optional String Comment)
 	{
 		`ZS_Info(Message);
 		SpawnTimerLastMessage = Message;
-	}
-}
-
-private function SpawnZeds(out Array<S_SpawnEntry> SpawnList, delegate<WaveCondition> Condition)
-{
-	local S_SpawnEntry SE;
-	local int Index;
-	
-	`ZS_Trace(`Location);
-
-	foreach SpawnList(SE, Index)
-	{
-		if (Condition(SE))
-		{
-			if (!ReadyToStart(SE))
-			{
-				continue;
-			}
-			
-			if (SE.Delay > 0)
-			{
-				SpawnList[Index].Delay -= dt;
-				continue;
-			}
-			
-			if (SE.SpawnsLeft > 0)
-			{
-				SpawnEntry(SpawnList, Index);
-			}
-		}
 	}
 }
 
