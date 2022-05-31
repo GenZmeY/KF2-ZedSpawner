@@ -47,6 +47,11 @@ var private Array<S_SpawnEntry> SpawnListR;
 var private Array<S_SpawnEntry> SpawnListBW;
 var private Array<S_SpawnEntry> SpawnListSW;
 
+var private bool NoFreeSpawnSlots;
+var private bool UseRegularSpawnList;
+var private bool UseBossSpawnList;
+var private bool UseSpecialSpawnList;
+
 var private KFGameInfo_Survival KFGIS;
 var private KFGameInfo_Endless  KFGIE;
 var private KFGI_Access         KFGIA;
@@ -63,6 +68,7 @@ var private Array<class<KFPawn_Monster> > BossClassCache;
 var private Array<class<KFPawn_Monster> > CustomZeds;
 
 var private String SpawnTimerLastMessage;
+var private String SpawnListsComment;
 
 delegate bool WaveCondition(S_SpawnEntry SE);
 
@@ -238,30 +244,12 @@ public function bool WaveConditionRegular(S_SpawnEntry SE)
 
 public function bool WaveConditionBoss(S_SpawnEntry SE)
 {
-	local KFPawn_Monster KFPM;
-	local int Index;
-	
 	`ZS_Trace(`Location);
 	
 	if (CurrentBossClass == None)
-	{
-		foreach WorldInfo.AllPawns(class'KFPawn_Monster', KFPM)
-		{
-			Index = BossClassCache.Find(KFPM.class);
-			if (Index != INDEX_NONE)
-			{
-				CurrentBossClass = BossClassCache[Index];
-				break;
-			}
-		}
-	}
-	
-	if (CurrentBossClass == None)
-	{
 		return false;
-	}
-	
-	return (SE.BossClass == CurrentBossClass);
+	else
+		return (SE.BossClass == CurrentBossClass);
 }
 
 public function bool WaveConditionSpecial(S_SpawnEntry SE)
@@ -291,42 +279,62 @@ private function SpawnTimer()
 		SpawnTimerLogger(true, "alive spawn limit reached");
 		return;
 	}
-		
-	if (!KFGIS.MyKFGRI.IsBossWave() && CfgSpawn.default.bShadowSpawn && KFGIS.MyKFGRI.AIRemaining <= KFGIS.AIAliveCount)
+	
+	if (!KFGIS.MyKFGRI.IsBossWave() && CfgSpawn.default.bShadowSpawn)
 	{
-		SpawnTimerLogger(true, "shadow spawn is active and no free spawn slots");
-		return;
-	}
-
-	SpawnTimerLogger(false);
-
-	if ((SpecialWave == INDEX_NONE && !KFGIS.MyKFGRI.IsBossWave())
-	|| (SpecialWave  != INDEX_NONE && !CfgSpawnListSW.default.bStopRegularSpawn)
-	|| (KFGIS.MyKFGRI.IsBossWave() && !CfgSpawnListBW.default.bStopRegularSpawn))
-	{
-		SpawnZeds(SpawnListR, WaveConditionRegular);
+		if (NoFreeSpawnSlots || KFGIS.MyKFGRI.AIRemaining <= KFGIS.AIAliveCount)
+		{
+			NoFreeSpawnSlots = true;
+			SpawnTimerLogger(true, "no free spawn slots");
+			return;
+		}
 	}
 	
-	if (SpecialWave != INDEX_NONE)
-	{
-		SpawnZeds(SpawnListSW, WaveConditionSpecial);
-	}
-	
-	if (KFGIS.MyKFGRI.IsBossWave())
-	{
-		SpawnZeds(SpawnListBW, WaveConditionBoss);
-	}
+	SpawnTimerLogger(false, SpawnListsComment);
+
+	if (UseRegularSpawnList) SpawnZeds(SpawnListR,  WaveConditionRegular);
+	if (UseSpecialSpawnList) SpawnZeds(SpawnListSW, WaveConditionSpecial);
+	if (UseBossSpawnList)    SpawnZeds(SpawnListBW, WaveConditionBoss);
 }
 
 private function SetupWave()
 {
-	local int WaveTotalAIDef;
+	local Array<String> SpawnListNames;
+	local int           WaveTotalAIDef;
+	local String        WaveTypeInfo;
 	
 	`ZS_Trace(`Location);
 	
+	if (CfgSpawn.default.bCyclicalSpawn && KFGIS.WaveNum > 1 && KFGIS.WaveNum == CycleWaveShift + CycleWaveSize * CurrentCycle)
+	{
+		CurrentCycle++;
+		`ZS_Info("Spawn cycle started:" @ CurrentCycle);
+	}
+	
 	CurrentWave = KFGIS.WaveNum;
 	
-	if (!KFGIS.MyKFGRI.IsBossWave())
+	if (KFGIE != None)
+	{
+		SpecialWave = KFGameReplicationInfo_Endless(KFGIE.GameReplicationInfo).CurrentSpecialMode;
+		if (SpecialWave != INDEX_NONE)
+		{
+			WaveTypeInfo = "Special:" @ EAIType(SpecialWave);
+		}
+	}
+	
+	if (KFGIS.MyKFGRI.IsBossWave())
+	{
+		CurrentBossClass = KFGIA.BossAITypePawn(EBossAIType(KFGIS.MyKFGRI.BossIndex));
+		if (CurrentBossClass == None)
+		{
+			`ZS_Error("Can't determine boss class:" @ CurrentBossClass);
+		}
+		else
+		{
+			WaveTypeInfo = "Boss:" @ CurrentBossClass;
+		}
+	}
+	else
 	{
 		WaveTotalAIDef = KFGIS.SpawnManager.WaveTotalAI;
 		KFGIS.SpawnManager.WaveTotalAI *= CfgSpawn.default.ZedTotalMultiplier;
@@ -338,24 +346,32 @@ private function SetupWave()
 		{
 			`ZS_Info("increase WaveTotalAI from" @ WaveTotalAIDef @ "to" @ WaveTotalAI @ "due to ZedTotalMultiplier" @ "(" $ CfgSpawn.default.ZedTotalMultiplier $ ")");
 		}
-	}
-	
-	if (CfgSpawn.default.bCyclicalSpawn && KFGIS.WaveNum > 1 && KFGIS.WaveNum == CycleWaveShift + CycleWaveSize * CurrentCycle)
-	{
-		CurrentCycle++;
-		`ZS_Info("Next spawn cycle started:" @ CurrentCycle);
+		
+		CurrentBossClass = None;
 	}
 	
 	ResetSpawnList(SpawnListR);
 	ResetSpawnList(SpawnListSW);
 	ResetSpawnList(SpawnListBW);
 	
-	CurrentBossClass = None;
+	NoFreeSpawnSlots    = false;
+	UseBossSpawnList    = KFGIS.MyKFGRI.IsBossWave();
+	UseSpecialSpawnList = (SpecialWave != INDEX_NONE);
+	UseRegularSpawnList = ((!UseSpecialSpawnList && !UseBossSpawnList)
+	|| (UseSpecialSpawnList && !CfgSpawnListSW.default.bStopRegularSpawn)
+	|| (UseBossSpawnList && !CfgSpawnListBW.default.bStopRegularSpawn));
 	
-	if (KFGIE != None)
+	if (UseRegularSpawnList) SpawnListNames.AddItem("regular");
+	if (UseSpecialSpawnList) SpawnListNames.AddItem("special");
+	if (UseBossSpawnList)    SpawnListNames.AddItem("boss");
+	JoinArray(SpawnListNames, SpawnListsComment, ", ");
+	
+	if (WaveTypeInfo != "")
 	{
-		SpecialWave = KFGameReplicationInfo_Endless(KFGIE.GameReplicationInfo).CurrentSpecialMode;
+		WaveTypeInfo = "(" $ WaveTypeInfo $ ")";
 	}
+	
+	`ZS_Info("Wave" @ CurrentWave @ WaveTypeInfo);
 }
 
 private function ResetSpawnList(out Array<S_SpawnEntry> List)
@@ -399,12 +415,10 @@ private function ResetSpawnList(out Array<S_SpawnEntry> List)
 		List[Index].SpawnsLeft  = List[Index].SpawnsTotal;
 		
 		List[Index].SingleSpawnLimit = Round(SE.SingleSpawnLimitDefault * (MLB + MLC * (Cycle - 1.0f) + MLP * (Players - 1.0f)));
-		
-		`ZS_Debug(SE.ZedClass @ "SpawnsTotal:" @ List[Index].SpawnsTotal @ "SingleSpawnLimit:" @ List[Index].SingleSpawnLimit);
 	}
 }
 
-private function SpawnTimerLogger(bool Stop, optional String Reason)
+private function SpawnTimerLogger(bool Stop, optional String Comment)
 {
 	local String Message;
 	
@@ -415,8 +429,8 @@ private function SpawnTimerLogger(bool Stop, optional String Reason)
 	else
 		Message = "Start spawn";
 	
-	if (Reason != "")
-		Message @= "(" $ Reason $ ")";
+	if (Comment != "")
+		Message @= "(" $ Comment $ ")";
 	
 	if (Message != SpawnTimerLastMessage)
 	{
@@ -436,12 +450,21 @@ private function SpawnZeds(out Array<S_SpawnEntry> SpawnList, delegate<WaveCondi
 	{
 		if (Condition(SE))
 		{
-			if (!ReadyToStart(SE)) continue;
+			if (!ReadyToStart(SE))
+			{
+				continue;
+			}
 			
-			if (ReadyToSpawn(SE))
-				SpawnEntry(SpawnListR, Index);
-			else
-				SpawnListR[Index].Delay -= dt;
+			if (SE.Delay > 0)
+			{
+				SpawnList[Index].Delay -= dt;
+				continue;
+			}
+			
+			if (SE.SpawnsLeft > 0)
+			{
+				SpawnEntry(SpawnList, Index);
+			}
 		}
 	}
 }
@@ -458,13 +481,6 @@ private function bool ReadyToStart(S_SpawnEntry SE)
 	{
 		return (SE.RelativeStart <= 1.0f - (float(KFGIS.MyKFGRI.AIRemaining) / float(WaveTotalAI)));
 	}
-}
-
-private function bool ReadyToSpawn(S_SpawnEntry SE)
-{
-	`ZS_Trace(`Location);
-	
-	return SE.Delay <= 0 && SE.SpawnsLeft > 0;
 }
 
 private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
@@ -488,7 +504,13 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 		if (CfgSpawn.default.bShadowSpawn && !KFGIS.MyKFGRI.IsBossWave())
 		{
 			FreeSpawnSlots = KFGIS.MyKFGRI.AIRemaining - KFGIS.AIAliveCount;
-			if (SpawnCount > FreeSpawnSlots)
+			if (FreeSpawnSlots == 0)
+			{
+				NoFreeSpawnSlots = true;
+				SpawnList[Index].SpawnsLeft = 0;
+				return;
+			}
+			else if (SpawnCount > FreeSpawnSlots)
 			{
 				`ZS_Info("Not enough free slots to spawn, will spawn" @ FreeSpawnSlots @ "instead of" @ SpawnCount);
 				SpawnCount = FreeSpawnSlots;
@@ -557,7 +579,7 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int SpawnCount, bo
 	local Vector SpawnLocation;
 	local KFPawn_Monster KFPM;
 	local Controller C;
-	local int SpawnFailed;
+	local int SpawnFailed, Spawned;
 	local int Index;
 	
 	`ZS_Trace(`Location);
@@ -576,7 +598,7 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int SpawnCount, bo
 		SpawnLocation = KFGIS.SpawnManager.GetBestSpawnVolume(CustomSquad).Location;
 		SpawnLocation.Z += 10;
 	}
-	
+
 	SpawnFailed = 0;
 	for (Index = 0; Index < SpawnCount; Index++)
 	{
@@ -598,15 +620,18 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int SpawnCount, bo
 		}
 		C.Possess(KFPM, false);
 	}
+	
+	Spawned = (SpawnCount - SpawnFailed);
 
 	if (CfgSpawn.default.bShadowSpawn && !KFGIS.MyKFGRI.IsBossWave())
 	{
-		KFGIS.MyKFGRI.AIRemaining -= (SpawnCount - SpawnFailed);
+		KFGIS.NumAIFinishedSpawning += Spawned;
+		KFGIS.NumAISpawnsQueued += Spawned;
 	}
 	
-	KFGIS.RefreshMonsterAliveCount();
-
-	return SpawnCount - SpawnFailed;
+	KFGIS.UpdateAIRemaining();
+	
+	return Spawned;
 }
 
 public function NotifyLogin(Controller C)
