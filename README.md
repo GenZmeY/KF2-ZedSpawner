@@ -8,7 +8,7 @@
 [![GitHub](https://img.shields.io/github/license/GenZmeY/KF2-ZedSpawner)](LICENSE)
 
 # Description
-Spawner for zeds. Started as a modification of the [PissJar](https://steamcommunity.com/sharedfiles/filedetails/?id=1082749153) and [Windows 10](https://steamcommunity.com/sharedfiles/filedetails/?id=2488241348) version, but grew into something completely different...  
+Spawner for zeds. Started as a modification of the [PissJar](https://steamcommunity.com/sharedfiles/filedetails/?id=1082749153) and [Windows 10](https://steamcommunity.com/sharedfiles/filedetails/?id=2488241348) version, but now there is almost nothing left of the previous mutator, lol  
 
 # Features
 - spawn without increasing zed counter;
@@ -17,9 +17,10 @@ Spawner for zeds. Started as a modification of the [PissJar](https://steamcommun
 - separate spawn for special waves and boss waves;
 - spawn after a certain percentage of killed zeds.
 
-# Usage
-**UNDER CONSTRUCTION**
+# Usage & Setup
+See [steam workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2811290931) page.
 
+# Spawn calculator
 [Spawn Calculator](https://docs.google.com/spreadsheets/d/1q67WJ36jhj6Y0lPNO5tS2bU79Wphu4Xmi62me6DAwtM/edit?usp=sharing)
 
 # Build
