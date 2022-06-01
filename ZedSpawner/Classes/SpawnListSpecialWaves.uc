@@ -36,7 +36,7 @@ public static function InitConfig(int Version, int LatestVersion)
 private static function ApplyDefault()
 {
 	local S_SpawnEntryCfg SpawnEntry;
-	local EAIType AIType;
+	local EAIType         AIType;
 	
 	default.bStopRegularSpawn = true;
 	default.Spawn.Length = 0;
@@ -61,6 +61,7 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 	local S_SpawnEntry        SpawnEntry;
 	local int                 Line;
 	local bool                Errors;
+	local int                 Loaded;
 	
 	if (KFGIE == None)
 	{
@@ -126,9 +127,19 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 		
 		if (!Errors)
 		{
+			Loaded++;
 			SpawnList.AddItem(SpawnEntry);
-			`ZS_Info("[" $ Line + 1 $ "]" @ "Loaded successfully:" @ SpawnEntryCfg.Wave @ SpawnEntryCfg.ZedClass);
+			`ZS_Debug("[" $ Line + 1 $ "]" @ "Loaded successfully: (" $ SpawnEntryCfg.Wave $ ")" @ SpawnEntryCfg.ZedClass);
 		}
+	}
+	
+	if (Loaded == default.Spawn.Length)
+	{
+		`ZS_Info("Special spawn list loaded successfully");
+	}
+	else
+	{
+		`ZS_Info("Special spawn list: loaded" @ Loaded @ "of" @ default.Spawn.Length @ "entries");
 	}
 	
 	return SpawnList;

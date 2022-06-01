@@ -13,7 +13,7 @@ struct S_SpawnEntryCfg
 	var bool    bSpawnAtPlayerStart;
 };
 
-var public  config bool bStopRegularSpawn;
+var public  config bool                   bStopRegularSpawn;
 var private config Array<S_SpawnEntryCfg> Spawn;
 
 public static function InitConfig(int Version, int LatestVersion, KFGI_Access KFGIA)
@@ -34,9 +34,11 @@ public static function InitConfig(int Version, int LatestVersion, KFGI_Access KF
 
 private static function ApplyDefault(KFGI_Access KFGIA)
 {
-	local S_SpawnEntryCfg SpawnEntry;
+	local S_SpawnEntryCfg               SpawnEntry;
 	local Array<class<KFPawn_Monster> > KFPM_Bosses;
-	local class<KFPawn_Monster> KFPMC;
+	local class<KFPawn_Monster>         KFPMC;
+	
+	default.Spawn.Length = 0;
 	
 	default.bStopRegularSpawn      = true;
 	default.Spawn.Length           = 0;
@@ -61,8 +63,9 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 	local S_SpawnEntry        SpawnEntry;
 	local int                 Line;
 	local bool                Errors;
+	local int                 Loaded;
 	
-	`ZS_Info("Load boss waves spawn list:");
+	`ZS_Info("Load boss waves spawn list...");
 	foreach default.Spawn(SpawnEntryCfg, Line)
 	{
 		Errors = false;
@@ -115,9 +118,19 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 		
 		if (!Errors)
 		{
+			Loaded++;
 			SpawnList.AddItem(SpawnEntry);
-			`ZS_Info("[" $ Line + 1 $ "]" @ "Loaded successfully:" @ SpawnEntryCfg.BossClass @ SpawnEntryCfg.ZedClass);
+			`ZS_Debug("[" $ Line + 1 $ "]" @ "Loaded successfully: (" $ SpawnEntryCfg.BossClass $ ")" @ SpawnEntryCfg.ZedClass);
 		}
+	}
+	
+	if (Loaded == default.Spawn.Length)
+	{
+		`ZS_Info("Boss spawn list loaded successfully");
+	}
+	else
+	{
+		`ZS_Info("Boss spawn list: loaded" @ Loaded @ "of" @ default.Spawn.Length @ "entries");
 	}
 	
 	return SpawnList;
