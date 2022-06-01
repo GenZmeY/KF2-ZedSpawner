@@ -63,6 +63,12 @@ public static function bool Load(E_LogLevel LogLevel)
 		Errors = true;
 	}
 	
+	if (default.SingleSpawnLimitMultiplier <= 0.f)
+	{
+		`ZS_Error("SingleSpawnLimitMultiplier" @ "(" $ default.SingleSpawnLimitMultiplier $ ")" @ "must be greater than 0.0");
+		Errors = true;
+	}
+	
 	if (default.SingleSpawnLimitPlayerMultiplier < 0.f)
 	{
 		`ZS_Error("SingleSpawnLimitPlayerMultiplier" @ "(" $ default.SingleSpawnLimitPlayerMultiplier $ ")" @ "must be greater than or equal 0.0");
