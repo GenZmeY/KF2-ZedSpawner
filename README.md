@@ -18,7 +18,7 @@ Spawner for zeds. Started as a modification of the [PissJar](https://steamcommun
 - spawn after a certain percentage of killed zeds.
 
 # Usage & Setup
-See [steam workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=2811290931) page.
+[See steam workshop page](https://steamcommunity.com/sharedfiles/filedetails/?id=2811290931)
 
 # Spawn calculator
 [Spawn Calculator](https://docs.google.com/spreadsheets/d/1q67WJ36jhj6Y0lPNO5tS2bU79Wphu4Xmi62me6DAwtM/edit?usp=sharing)
