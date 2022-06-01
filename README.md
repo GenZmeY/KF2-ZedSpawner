@@ -11,11 +11,11 @@
 Spawner for zeds. Started as a modification of the [PissJar](https://steamcommunity.com/sharedfiles/filedetails/?id=1082749153) and [Windows 10](https://steamcommunity.com/sharedfiles/filedetails/?id=2488241348) version, but grew into something completely different...  
 
 # Features
-- spawn without increasing zed counter
-- spawn depends on the number of players
-- cyclic spawn (useful for endless mode)
-- separate spawn for special waves and boss waves
-- spawn after a certain percentage of killed zeds
+- spawn without increasing zed counter;
+- spawn depends on the number of players;
+- cyclic spawn (useful for endless mode);
+- separate spawn for special waves and boss waves;
+- spawn after a certain percentage of killed zeds.
 
 # Usage
 **UNDER CONSTRUCTION**
