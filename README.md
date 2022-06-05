@@ -8,7 +8,7 @@
 [![GitHub](https://img.shields.io/github/license/GenZmeY/KF2-ZedSpawner)](LICENSE)
 
 # Description
-Spawner for zeds. Started as a modification of the [PissJar](https://steamcommunity.com/sharedfiles/filedetails/?id=1082749153) and [Windows 10](https://steamcommunity.com/sharedfiles/filedetails/?id=2488241348) version, but now there is almost nothing left of the previous mutator, lol  
+Spawner for zeds. Started as a modification of the [Windows 10](https://steamcommunity.com/sharedfiles/filedetails/?id=2488241348) version, but now there is almost nothing left of the previous mutator, lol  
 
 # Features
 - spawn without increasing zed counter;
