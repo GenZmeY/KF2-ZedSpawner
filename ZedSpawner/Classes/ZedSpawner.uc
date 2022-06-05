@@ -1,9 +1,7 @@
 class ZedSpawner extends Info
 	config(ZedSpawner);
 
-const LatestVersion = 1;
-
-const dt = 1;
+const LatestVersion = 2;
 
 const CfgSpawn        = class'Spawn';
 const CfgSpawnListRW  = class'SpawnListRegular';
@@ -34,7 +32,7 @@ struct S_SpawnEntry
 	var float  RelativeStartDefault;
 	var float  RelativeStart;
 	var int    DelayDefault;
-	var int    Delay;
+	var float  Delay;
 	var int    PawnsLeft;
 	var int    PawnsTotal;
 	var bool   SpawnAtPlayerStart;
@@ -44,6 +42,9 @@ struct S_SpawnEntry
 
 var private config int        Version;
 var private config E_LogLevel LogLevel;
+var private config float      Tickrate;
+
+var private float dt;
 
 var private Array<S_SpawnEntry> SpawnListRW;
 var private Array<S_SpawnEntry> SpawnListBW;
@@ -101,6 +102,7 @@ private function InitConfig()
 {
 	if (Version == `NO_CONFIG)
 	{
+		Tickrate = 1.0f;
 		LogLevel = LL_Info;
 		SaveConfig();
 	}
@@ -114,6 +116,9 @@ private function InitConfig()
 	{
 		case `NO_CONFIG:
 			`ZS_Info("Config created");
+			
+		case 1:
+			Tickrate = 1.0f;
 
 		case MaxInt:
 			`ZS_Info("Config updated to version"@LatestVersion);
@@ -164,12 +169,20 @@ private function Init()
 	}
 	`ZS_Log("LogLevel:" @ LogLevel);
 	
-	if (!CfgSpawn.static.Load(LogLevel))
+	if (Tickrate <= 0)
+	{
+		`ZS_Error("Spawner tickrate must be positive (current value:" @ Tickrate $ ")");
+	}
+	
+	if (!CfgSpawn.static.Load(LogLevel) || Tickrate <= 0)
 	{
 		`ZS_Fatal("Wrong settings, Destroy...");
 		Destroy();
 		return;
 	}
+	
+	dt = 1 / Tickrate;
+	`ZS_Info("Spawner tickrate:" @ Tickrate @ "(update every" @ dt $ "s)");
 
 	SpawnListRW = CfgSpawnListRW.static.Load(LogLevel);
 	SpawnListBW = CfgSpawnListBW.static.Load(LogLevel);
@@ -193,7 +206,7 @@ private function Init()
 	
 	PreloadContent();
 	
-	SetTimer(float(dt), true, nameof(SpawnTimer));
+	SetTimer(dt, true, nameof(SpawnTimer));
 }
 
 private function PreloadContent()
@@ -281,7 +294,7 @@ private function SpawnTimer()
 			continue;
 		}
 		
-		if (SE.Delay > 0)
+		if (SE.Delay > 0.0f)
 		{
 			SpawnListCurrent[Index].Delay -= dt;
 			continue;
@@ -431,15 +444,15 @@ private function AdjustSpawnList(out Array<S_SpawnEntry> List)
 		if (KFGIS.MyKFGRI.IsBossWave())
 		{
 			List[Index].RelativeStart = 0.f;
-			List[Index].Delay = SE.DelayDefault;
+			List[Index].Delay = float(SE.DelayDefault);
 		}
 		else
 		{
 			List[Index].RelativeStart = SE.RelativeStartDefault;
 			if (List[Index].RelativeStart == 0.f)
-				List[Index].Delay = SE.DelayDefault;
+				List[Index].Delay = float(SE.DelayDefault);
 			else
-				List[Index].Delay = 0;
+				List[Index].Delay = 0.0f;
 		}
 		
 		PawnTotalF = B * (TM + TCM * (Cycle - 1.0f) + TPM * (Players - 1.0f));
@@ -490,7 +503,7 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 	
 	SE = SpawnList[Index];
 	
-	SpawnList[Index].Delay = SE.DelayDefault;
+	SpawnList[Index].Delay = float(SE.DelayDefault);
 	if (FRand() <= SE.Probability || SE.ForceSpawn)
 	{
 		if (SE.SingleSpawnLimit == 0 || SE.PawnsLeft < SE.SingleSpawnLimit)
@@ -520,10 +533,10 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 		Spawned = SpawnZed(SE.ZedClass, PawnCount, SE.SpawnAtPlayerStart);
 		if (Spawned == INDEX_NONE)
 		{
-			SpawnList[Index].Delay = 5;
+			SpawnList[Index].Delay = 5.0f;
 			SpawnList[Index].ForceSpawn = true;
 			Action  = "Skip spawn";
-			Comment = "no free spawn volume, try to spawn it again in" @ SpawnList[Index].Delay @ "seconds...";
+			Comment = "no free spawn volume, try to spawn it again in" @ Round(SpawnList[Index].Delay) @ "seconds...";
 			SpawnLog(SE, Action, Comment);
 			return;
 		}
