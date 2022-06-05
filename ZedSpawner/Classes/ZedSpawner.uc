@@ -35,8 +35,8 @@ struct S_SpawnEntry
 	var float  RelativeStart;
 	var int    DelayDefault;
 	var int    Delay;
-	var int    SpawnsLeft;
-	var int    SpawnsTotal;
+	var int    PawnsLeft;
+	var int    PawnsTotal;
 	var bool   SpawnAtPlayerStart;
 	var bool   ForceSpawn;
 	var String ZedNameFiller;
@@ -287,7 +287,7 @@ private function SpawnTimer()
 			continue;
 		}
 		
-		if (SE.SpawnsLeft > 0)
+		if (SE.PawnsLeft > 0)
 		{
 			SpawnEntry(SpawnListCurrent, Index);
 		}
@@ -403,8 +403,9 @@ private function AdjustSpawnList(out Array<S_SpawnEntry> List)
 	local S_SpawnEntry SE;
 	local int Index;
 	local float Cycle, Players;
-	local float MSB, MSC, MSP;
-	local float MLB, MLC, MLP;
+	local float B, TM, TCM, TPM;
+	local float L, LM, LCM, LPM;
+	local float PawnTotalF, PawnLimitF;
 	local int ZedNameMaxLength;
 	
 	`ZS_Trace(`Location);
@@ -412,13 +413,16 @@ private function AdjustSpawnList(out Array<S_SpawnEntry> List)
 	Cycle   = float(CurrentCycle);
 	Players = float(PlayerCount());
 	
-	MSB = CfgSpawn.default.ZedTotalMultiplier;
-	MSC = CfgSpawn.default.SpawnTotalCycleMultiplier;
-	MSP = CfgSpawn.default.SpawnTotalPlayerMultiplier;
+	B   = float(SE.SpawnCountBase);
+	L   = float(SE.SingleSpawnLimitDefault);
+	
+	TM  = CfgSpawn.default.ZedTotalMultiplier;
+	TCM = CfgSpawn.default.SpawnTotalCycleMultiplier;
+	TPM = CfgSpawn.default.SpawnTotalPlayerMultiplier;
 		
-	MLB = CfgSpawn.default.SingleSpawnLimitMultiplier;
-	MLC = CfgSpawn.default.SingleSpawnLimitCycleMultiplier;
-	MLP = CfgSpawn.default.SingleSpawnLimitPlayerMultiplier;
+	LM  = CfgSpawn.default.SingleSpawnLimitMultiplier;
+	LCM = CfgSpawn.default.SingleSpawnLimitCycleMultiplier;
+	LPM = CfgSpawn.default.SingleSpawnLimitPlayerMultiplier;
 	
 	ZedNameMaxLength = 0;
 	foreach List(SE, Index)
@@ -437,11 +441,14 @@ private function AdjustSpawnList(out Array<S_SpawnEntry> List)
 			else
 				List[Index].Delay = 0;
 		}
-
-		List[Index].ForceSpawn     = false;
-		List[Index].SpawnsTotal      = Round(SE.SpawnCountBase          * (MSB + MSC * (Cycle - 1.0f) + MSP * (Players - 1.0f)));
-		List[Index].SingleSpawnLimit = Round(SE.SingleSpawnLimitDefault * (MLB + MLC * (Cycle - 1.0f) + MLP * (Players - 1.0f)));
-		List[Index].SpawnsLeft       = List[Index].SpawnsTotal;
+		
+		PawnTotalF = B * (TM + TCM * (Cycle - 1.0f) + TPM * (Players - 1.0f));
+		PawnLimitF = L * (LM + LCM * (Cycle - 1.0f) + LPM * (Players - 1.0f));
+		
+		List[Index].ForceSpawn       = false;
+		List[Index].PawnsTotal       = Max(Round(PawnTotalF), 1);
+		List[Index].SingleSpawnLimit = Max(Round(PawnLimitF), 1);
+		List[Index].PawnsLeft        = List[Index].PawnsTotal;
 	}
 	
 	foreach List(SE, Index)
@@ -476,7 +483,7 @@ private function SpawnTimerLogger(bool Stop, optional String Comment)
 private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 {
 	local S_SpawnEntry SE;
-	local int FreeSpawnSlots, SpawnCount, Spawned;
+	local int FreeSpawnSlots, PawnCount, Spawned;
 	local String Action, Comment, NextSpawn;
 	
 	`ZS_Trace(`Location);
@@ -486,13 +493,13 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 	SpawnList[Index].Delay = SE.DelayDefault;
 	if (FRand() <= SE.Probability || SE.ForceSpawn)
 	{
-		if (SE.SingleSpawnLimit == 0 || SE.SpawnsLeft < SE.SingleSpawnLimit)
+		if (SE.SingleSpawnLimit == 0 || SE.PawnsLeft < SE.SingleSpawnLimit)
 		{
-			SpawnCount = SE.SpawnsLeft;
+			PawnCount = SE.PawnsLeft;
 		}
 		else
 		{
-			SpawnCount = SE.SingleSpawnLimit;
+			PawnCount = SE.SingleSpawnLimit;
 		}
 		
 		if (CfgSpawn.default.bShadowSpawn && !KFGIS.MyKFGRI.IsBossWave())
@@ -501,16 +508,16 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 			if (FreeSpawnSlots == 0)
 			{
 				NoFreeSpawnSlots = true;
-				SpawnList[Index].SpawnsLeft = 0;
+				SpawnList[Index].PawnsLeft = 0;
 				return;
 			}
-			else if (SpawnCount > FreeSpawnSlots)
+			else if (PawnCount > FreeSpawnSlots)
 			{
-				SpawnCount = FreeSpawnSlots;
+				PawnCount = FreeSpawnSlots;
 			}
 		}
 		
-		Spawned = SpawnZed(SE.ZedClass, SpawnCount, SE.SpawnAtPlayerStart);
+		Spawned = SpawnZed(SE.ZedClass, PawnCount, SE.SpawnAtPlayerStart);
 		if (Spawned == INDEX_NONE)
 		{
 			SpawnList[Index].Delay = 5;
@@ -538,10 +545,10 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 		Spawned = SE.SingleSpawnLimit;
 	}
 
-	SpawnList[Index].SpawnsLeft -= Spawned;
-	if (SpawnList[Index].SpawnsLeft > 0)
+	SpawnList[Index].PawnsLeft -= Spawned;
+	if (SpawnList[Index].PawnsLeft > 0)
 	{
-		NextSpawn = "next after" @ SE.DelayDefault $ "sec," @ "pawns left:" @ SpawnList[Index].SpawnsLeft;
+		NextSpawn = "next after" @ SE.DelayDefault $ "sec," @ "pawns left:" @ SpawnList[Index].PawnsLeft;
 	}
 	SpawnLog(SE, Action, Comment, NextSpawn);
 }
@@ -593,7 +600,7 @@ private function Vector PlayerStartLocation()
 	return KFGIS.FindPlayerStart(None, 0).Location;
 }
 
-private function int SpawnZed(class<KFPawn_Monster> ZedClass, int SpawnCount, bool SpawnAtPlayerStart)
+private function int SpawnZed(class<KFPawn_Monster> ZedClass, int PawnCount, bool SpawnAtPlayerStart)
 {
 	local Array<class<KFPawn_Monster> > CustomSquad;
 	local Vector SpawnLocation, PlayerStart;
@@ -614,7 +621,7 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int SpawnCount, bo
 	}
 	else
 	{
-		for (Index = 0; Index < SpawnCount; Index++)
+		for (Index = 0; Index < PawnCount; Index++)
 		{
 			CustomSquad.AddItem(ZedClass);
 		}
@@ -635,7 +642,7 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int SpawnCount, bo
 	}
 
 	Spawned = 0; Failed = 0;
-	while (Failed + Spawned < SpawnCount)
+	while (Failed + Spawned < PawnCount)
 	{
 		KFPM = Spawn(ZedClass,,, SpawnLocation, rot(0,0,1),, true);
 		if (KFPM == None)
