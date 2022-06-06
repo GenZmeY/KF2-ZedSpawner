@@ -1,7 +1,71 @@
-[h1]ZedSpawner[/h1]
-
 [h1]Description[/h1]
-Work In Progress...
+Spawner for zeds. Started as a modification of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2488241348]this version[/url], but now there is almost nothing left of the previous mutator, lol xD
+
+[h1]Features[/h1]
+- spawn without increasing zed counter;
+- spawn depends on the number of players;
+- cyclic spawn (useful for endless mode);
+- separate spawn for special waves and boss waves;
+- spawn after a certain percentage of killed zeds.
+
+[h1]Whitelisted?[/h1]
+No. This mod is not whitelisted and will unrank your server. Any XP gained will not be saved.
+
+[h1]Usage (single player)[/h1]
+1. Subscribe to this mutator;
+2. Start KF2; 
+3. Open console (`) and input:
+[b]open KF-BioticsLab?Mutator=ZedSpawner.ZedSpawnerMut[/b]
+(replace the map and add the parameters you need)
+4. <Enter>.
+
+[h1]Usage (server)[/h1]
+[b]Note:[/b] [i]If you don't understand what is written here, read the article [url=https://wiki.killingfloor2.com/index.php?title=Dedicated_Server_(Killing_Floor_2)][u]Dedicated Server (KF2 wiki)[/u][/url] before following these instructions.[/i]
+
+1. Open your [b]PCServer-KFEngine.ini[/b] / [b]LinuxServer-KFEngine.ini[/b];
+2. Add the following string to the [b][OnlineSubsystemSteamworks.KFWorkshopSteamworks][/b] section (create one if it doesn't exist):
+[b]ServerSubscribedWorkshopItems=2811290931[/b]
+3. Start the server and wait while the mutator is downloading;
+4. Add mutator to server start parameters: [b]?Mutator=ZedSpawner.ZedSpawnerMut[/b] and restart the server.
+
+[h1]Setup[/h1]
+At the first start, the [b]KFZedSpawner.ini[/b] config will be created. There are already default settings and spawn lists, but you still need to change them because this is just an example.
+
+[b]Cyclic spawn[/b]
+If you don't want to write an endless spawn list for the endless mode (lol) use a cyclic spawn. Set parameter [b]bCyclicalSpawn=True[/b]
+After the last wave in the spawn list ends, spawn will start again from the beginning of the list.
+Using the [b]SpawnTotalCycleMultiplier[/b] and [b]SingleSpawnLimitCycleMultiplier[/b] modifiers will allow you to adjust the difficulty of the following cycles.
+
+[b]Shadow spawn[/b]
+With [b]bShadowSpawn=True[/b], the zeds from the list will replace the original zeds that haven't spawned yet, so the counter of the remaining zeds won't grow. Spawning will stop when there are no unspawned zeds left.
+With [b]bShadowSpawn=False[/b] zeds from the spawn list will not replace the original ones. The counter of remaining zeds will increase when spawning. Spawn will continue until the end of the wave.
+
+[b]AliveSpawnLimit[/b]
+If you have a server crash with a large number of zeds, set [b]AliveSpawnLimit[/b]. If the number of live zeds reaches the specified limit, spawning will be stopped until there are fewer zeds. At zero there is no limit.
+
+[b]Spawn lists[/b]
+Use the [b][ZedSpawner.SpawnListRegular][/b] section to set spawn on any wave.
+Use the [b][ZedSpawner.SpawnListBossWaves][/b] and [b][ZedSpawner.SpawnListSpecialWaves][/b] sections to set a separate spawn for the boss wave and special waves if needed. Use [b]bStopRegularSpawn=True[/b] if you want to stop spawning from the regular list during boss waves or special waves.
+
+[b]Spawn entry parameters[/b]
+[list]
+[*][b]Wave / BossClass[/b] - what wave is the spawn for. Wave number for the regular list, wave type for the special list; boss class for the boss list.
+[*][b]ZedClass[/b] - the class of the zed you want to spawn (for example: ZedternalReborn.WMPawn_ZedScrake_Omega).
+[*][b]RelativeStart[/b] - allows you to start spawning a zed not on a timer, but after killing the specified percentage of zeds. If set to zero, spawn will start after [b]Delay[/b] seconds from the start of the wave. Note that [b]RelativeStart[/b] does not work on bosses.
+[*][b]Delay[/b] - time in seconds between spawns.
+[*][b]Probability[/b] - the chance (%) of each spawn (1-100).
+[*][b]SpawnCountBase[/b] - The base number of zeds to spawn, aka the number of zeds that will be spawned on the first cycle with one player. Can be adjusted by modifiers, number of players and cycle number.
+[*][b]SingleSpawnLimit[/b] - maximum number of zeds for one spawn. Can be adjusted by modifiers, number of players and cycle number.
+[*][b]bSpawnAtPlayerStart[/b] - exactly what is written.
+[/list]
+
+[h1]Spawn logic[/h1]
+I really tried to describe in text how it works, but every time I got some kind of crap. Therefore, I decided to explain it a little differently and made a small calculator for this. It is interactive, you can change the parameters and see what happens. It has all the necessary explanations, so I think you will quickly figure out how the spawner works.
+
+[h1]📌[url=https://redirect.genzmey.su/kf2-zedspawner-calc]Spawn calculator[/url][/h1]
+[i]Just please try not to interfere with each other if you see that someone is already using a calculator.[/i]
+
+By the way, ZedSpawner logs everything it does, so reading the logs can also help you figure out how it works.
 
 [h1]Sources[/h1]
-[url=https://github.com/GenZmeY/KF2-ZedSpawner]https://github.com/GenZmeY/KF2-ZedSpawner[/url]
+[url=https://github.com/GenZmeY/KF2-ZedSpawner]https://github.com/GenZmeY/KF2-ZedSpawner[/url] (GNU GPLv3)
