@@ -50,4 +50,4 @@ Describe what the bug looks like and how reproduce it.
 Attaching your KFZedSpawner.ini and Launch.log can also be helpful.
 
 # License
-[GNU GPLv3](LICENSE)
+[GNU GPLv3](LICENSE)  
