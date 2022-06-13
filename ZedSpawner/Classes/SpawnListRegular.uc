@@ -11,10 +11,14 @@ struct S_SpawnEntryCfg
 	var int     Probability;
 	var int     SpawnCountBase;
 	var int     SingleSpawnLimit;
-	var bool    bSpawnAtPlayerStart;
 };
 
 var public config Array<S_SpawnEntryCfg> Spawn;
+
+delegate int SpawnListSort(S_SpawnEntryCfg A, S_SpawnEntryCfg B)
+{
+	return A.Wave > B.Wave ? -1 : 0;
+}
 
 public static function InitConfig(int Version, int LatestVersion, KFGI_Access KFGIA)
 {
@@ -46,8 +50,7 @@ private static function ApplyDefault(KFGI_Access KFGIA)
 	SpawnEntry.RelativeStart       = 25;
 	SpawnEntry.Delay               = 60;
 	SpawnEntry.Probability         = 100;
-	SpawnEntry.bSpawnAtPlayerStart = false;
-	
+
 	KFPM_Zeds = KFGIA.GetAIClassList();
 	foreach KFPM_Zeds(KFPMC)
 	{
@@ -120,8 +123,6 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 			Errors = true;
 		}
 
-		SpawnEntry.SpawnAtPlayerStart = SpawnEntryCfg.bSpawnAtPlayerStart;
-		
 		if (!Errors)
 		{
 			Loaded++;
@@ -130,9 +131,11 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 		}
 	}
 	
+	default.Spawn.Sort(SpawnListSort);
+	
 	if (Loaded == default.Spawn.Length)
 	{
-		`ZS_Info("Regular spawn list loaded successfully");
+		`ZS_Info("Regular spawn list loaded successfully (" $ default.Spawn.Length @ "entries)");
 	}
 	else
 	{

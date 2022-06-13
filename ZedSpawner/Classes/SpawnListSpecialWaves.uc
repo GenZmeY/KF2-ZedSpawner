@@ -11,7 +11,6 @@ struct S_SpawnEntryCfg
 	var int     Probability;
 	var int     SpawnCountBase;
 	var int     SingleSpawnLimit;
-	var bool    bSpawnAtPlayerStart;
 };
 
 var public  config bool bStopRegularSpawn;
@@ -46,7 +45,6 @@ private static function ApplyDefault()
 	SpawnEntry.RelativeStart       = 0;
 	SpawnEntry.Delay               = 60;
 	SpawnEntry.Probability         = 100;
-	SpawnEntry.bSpawnAtPlayerStart = false;
 	foreach class'KFGameInfo_Endless'.default.SpecialWaveTypes(AIType)
 	{
 		SpawnEntry.Wave = AIType;
@@ -123,8 +121,6 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 			Errors = true;
 		}
 
-		SpawnEntry.SpawnAtPlayerStart = SpawnEntryCfg.bSpawnAtPlayerStart;
-		
 		if (!Errors)
 		{
 			Loaded++;
@@ -135,7 +131,7 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 	
 	if (Loaded == default.Spawn.Length)
 	{
-		`ZS_Info("Special spawn list loaded successfully");
+		`ZS_Info("Special spawn list loaded successfully (" $ default.Spawn.Length @ "entries)");
 	}
 	else
 	{

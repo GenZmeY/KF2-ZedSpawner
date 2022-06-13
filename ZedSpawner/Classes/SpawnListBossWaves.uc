@@ -10,7 +10,6 @@ struct S_SpawnEntryCfg
 	var int     Probability;
 	var int     SpawnCountBase;
 	var int     SingleSpawnLimit;
-	var bool    bSpawnAtPlayerStart;
 };
 
 var public  config bool                   bStopRegularSpawn;
@@ -47,7 +46,6 @@ private static function ApplyDefault(KFGI_Access KFGIA)
 	SpawnEntry.SingleSpawnLimit    = 1;
 	SpawnEntry.Delay               = 30;
 	SpawnEntry.Probability         = 100;
-	SpawnEntry.bSpawnAtPlayerStart = false;
 	KFPM_Bosses = KFGIA.GetAIBossClassList();
 	foreach KFPM_Bosses(KFPMC)
 	{
@@ -65,7 +63,7 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 	local bool                Errors;
 	local int                 Loaded;
 	
-	`ZS_Info("Load boss waves spawn list...");
+	`ZS_Info("Load boss waves spawn list:");
 	foreach default.Spawn(SpawnEntryCfg, Line)
 	{
 		Errors = false;
@@ -114,8 +112,6 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 			Errors = true;
 		}
 		
-		SpawnEntry.SpawnAtPlayerStart = SpawnEntryCfg.bSpawnAtPlayerStart;
-		
 		if (!Errors)
 		{
 			Loaded++;
@@ -126,7 +122,7 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 	
 	if (Loaded == default.Spawn.Length)
 	{
-		`ZS_Info("Boss spawn list loaded successfully");
+		`ZS_Info("Boss spawn list loaded successfully (" $ default.Spawn.Length @ "entries)");
 	}
 	else
 	{

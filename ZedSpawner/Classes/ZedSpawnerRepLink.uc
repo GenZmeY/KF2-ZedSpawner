@@ -1,8 +1,9 @@
 class ZedSpawnerRepLink extends ReplicationInfo;
 
-var public E_LogLevel LogLevel;
-var public Array<class<KFPawn_Monster> > CustomZeds;
-var private int Recieved;
+var public  ZedSpawner ZS;
+var public  E_LogLevel LogLevel;
+var public  Array<class<KFPawn_Monster> > CustomZeds;
+var private int Recieved; 
 
 replication
 {
@@ -10,7 +11,11 @@ replication
 		LogLevel;
 }
 
-public simulated function bool SafeDestroy() { if (!bPendingDelete) return Destroy(); else return true; }
+public simulated function bool SafeDestroy()
+{
+	`ZS_Debug(`Location @ "bPendingDelete:" @ bPendingDelete @ "bDeleteMe" @ bDeleteMe);
+	return (bPendingDelete || bDeleteMe || Destroy());
+}
 
 public reliable client function ClientSync(class<KFPawn_Monster> CustomZed)
 {
@@ -40,11 +45,16 @@ public reliable server function ServerSync()
 {
 	`ZS_Trace(`Location);
 	
+	if (bPendingDelete || bDeleteMe) return;
+	
 	if (CustomZeds.Length == Recieved || WorldInfo.NetMode == NM_StandAlone)
 	{
 		`ZS_Debug("Sync finished");
 		SyncFinished();
-		SafeDestroy();
+		if (!ZS.DestroyRepLink(Controller(Owner)))
+		{
+			SafeDestroy();
+		}
 	}
 	else
 	{

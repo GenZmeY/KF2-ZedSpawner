@@ -1,12 +1,13 @@
 class ZedSpawner extends Info
 	config(ZedSpawner);
 
-const LatestVersion = 2;
+const LatestVersion = 3;
 
-const CfgSpawn        = class'Spawn';
-const CfgSpawnListRW  = class'SpawnListRegular';
-const CfgSpawnListBW  = class'SpawnListBossWaves';
-const CfgSpawnListSW  = class'SpawnListSpecialWaves';
+const CfgSpawn              = class'Spawn';
+const CfgSpawnAtPlayerStart = class'SpawnAtPlayerStart';
+const CfgSpawnListRW        = class'SpawnListRegular';
+const CfgSpawnListBW        = class'SpawnListBossWaves';
+const CfgSpawnListSW        = class'SpawnListSpecialWaves';
 
 enum E_LogLevel
 {
@@ -35,7 +36,6 @@ struct S_SpawnEntry
 	var float  Delay;
 	var int    PawnsLeft;
 	var int    PawnsTotal;
-	var bool   SpawnAtPlayerStart;
 	var bool   ForceSpawn;
 	var String ZedNameFiller;
 };
@@ -55,6 +55,7 @@ var private bool NoFreeSpawnSlots;
 var private bool UseRegularSpawnList;
 var private bool UseBossSpawnList;
 var private bool UseSpecialSpawnList;
+var private bool GlobalSpawnAtPlayerStart;
 
 var private KFGameInfo_Survival KFGIS;
 var private KFGameInfo_Endless  KFGIE;
@@ -69,9 +70,17 @@ var private int WaveTotalAI;
 
 var private class<KFPawn_Monster>         CurrentBossClass;
 var private Array<class<KFPawn_Monster> > CustomZeds;
+var private Array<class<KFPawn_Monster> > SpawnAtPlayerStartZeds;
 
 var private bool   SpawnActive;
 var private String SpawnListsComment;
+
+var private Array<ZedSpawnerRepLink> RepLinks;
+
+public simulated function bool SafeDestroy()
+{
+	return (bPendingDelete || bDeleteMe || Destroy());
+}
 
 public event PreBeginPlay()
 {
@@ -80,7 +89,7 @@ public event PreBeginPlay()
 	if (WorldInfo.NetMode == NM_Client)
 	{
 		`ZS_Fatal("NetMode == NM_Client, Destroy...");
-		Destroy();
+		SafeDestroy();
 		return;
 	}
 	
@@ -91,7 +100,7 @@ public event PostBeginPlay()
 {
 	`ZS_Trace(`Location);
 	
-	if (bPendingDelete) return;
+	if (bPendingDelete || bDeleteMe) return;
 	
 	Super.PostBeginPlay();
 	
@@ -102,12 +111,12 @@ private function InitConfig()
 {
 	if (Version == `NO_CONFIG)
 	{
-		Tickrate = 1.0f;
 		LogLevel = LL_Info;
 		SaveConfig();
 	}
 	
 	CfgSpawn.static.InitConfig(Version, LatestVersion);
+	CfgSpawnAtPlayerStart.static.InitConfig(Version, LatestVersion);
 	CfgSpawnListRW.static.InitConfig(Version, LatestVersion, KFGIA);
 	CfgSpawnListBW.static.InitConfig(Version, LatestVersion, KFGIA);
 	CfgSpawnListSW.static.InitConfig(Version, LatestVersion);
@@ -119,6 +128,8 @@ private function InitConfig()
 			
 		case 1:
 			Tickrate = 1.0f;
+			
+		case 2:
 
 		case MaxInt:
 			`ZS_Info("Config updated to version"@LatestVersion);
@@ -145,6 +156,7 @@ private function InitConfig()
 private function Init()
 {
 	local S_SpawnEntry SE;
+	local String CurrentMap;
 	
 	`ZS_Trace(`Location);
 	
@@ -152,7 +164,7 @@ private function Init()
 	if (KFGIS == None)
 	{
 		`ZS_Fatal("Incompatible gamemode:" @ WorldInfo.Game $ ". Destroy...");
-		Destroy();
+		SafeDestroy();
 		return;
 	}
 	
@@ -177,7 +189,7 @@ private function Init()
 	if (!CfgSpawn.static.Load(LogLevel) || Tickrate <= 0)
 	{
 		`ZS_Fatal("Wrong settings, Destroy...");
-		Destroy();
+		SafeDestroy();
 		return;
 	}
 	
@@ -187,6 +199,11 @@ private function Init()
 	SpawnListRW = CfgSpawnListRW.static.Load(LogLevel);
 	SpawnListBW = CfgSpawnListBW.static.Load(LogLevel);
 	SpawnListSW = CfgSpawnListSW.static.Load(KFGIE, LogLevel);
+	SpawnAtPlayerStartZeds = CfgSpawnAtPlayerStart.static.Load(LogLevel);
+	
+	CurrentMap = String(WorldInfo.GetPackageName());
+	GlobalSpawnAtPlayerStart = (CfgSpawnAtPlayerStart.default.Map.Find(CurrentMap) != INDEX_NONE);
+	`ZS_Info("GlobalSpawnAtPlayerStart:" @ GlobalSpawnAtPlayerStart $ GlobalSpawnAtPlayerStart ? "(" $ CurrentMap $ ")" : "");
 	
 	CurrentWave = INDEX_NONE;
 	SpecialWave = INDEX_NONE;
@@ -311,6 +328,7 @@ private function SetupWave()
 {
 	local Array<String> SpawnListNames;
 	local int           WaveTotalAIDef;
+	local byte          BaseWave;
 	local String        WaveTypeInfo;
 	local S_SpawnEntry  SE;
 	local EAIType       SWType;
@@ -379,9 +397,12 @@ private function SetupWave()
 	if (UseRegularSpawnList)
 	{
 		SpawnListNames.AddItem("regular");
+		BaseWave = KFGIS.WaveNum - CycleWaveSize * (CurrentCycle - 1);
 		foreach SpawnListRW(SE)
-			if (SE.Wave == KFGIS.WaveNum - CycleWaveSize * (CurrentCycle - 1))
+			if (SE.Wave == BaseWave)
 				SpawnListCurrent.AddItem(SE);
+			else if (SE.Wave > BaseWave)
+				break;
 	}
 	
 	if (UseSpecialSpawnList)
@@ -426,9 +447,6 @@ private function AdjustSpawnList(out Array<S_SpawnEntry> List)
 	Cycle   = float(CurrentCycle);
 	Players = float(PlayerCount());
 	
-	B   = float(SE.SpawnCountBase);
-	L   = float(SE.SingleSpawnLimitDefault);
-	
 	TM  = CfgSpawn.default.ZedTotalMultiplier;
 	TCM = CfgSpawn.default.SpawnTotalCycleMultiplier;
 	TPM = CfgSpawn.default.SpawnTotalPlayerMultiplier;
@@ -436,7 +454,7 @@ private function AdjustSpawnList(out Array<S_SpawnEntry> List)
 	LM  = CfgSpawn.default.SingleSpawnLimitMultiplier;
 	LCM = CfgSpawn.default.SingleSpawnLimitCycleMultiplier;
 	LPM = CfgSpawn.default.SingleSpawnLimitPlayerMultiplier;
-	
+
 	ZedNameMaxLength = 0;
 	foreach List(SE, Index)
 	{
@@ -455,6 +473,9 @@ private function AdjustSpawnList(out Array<S_SpawnEntry> List)
 				List[Index].Delay = 0.0f;
 		}
 		
+		B = float(SE.SpawnCountBase);
+		L = float(SE.SingleSpawnLimitDefault);
+	
 		PawnTotalF = B * (TM + TCM * (Cycle - 1.0f) + TPM * (Players - 1.0f));
 		PawnLimitF = L * (LM + LCM * (Cycle - 1.0f) + LPM * (Players - 1.0f));
 		
@@ -498,6 +519,7 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 	local S_SpawnEntry SE;
 	local int FreeSpawnSlots, PawnCount, Spawned;
 	local String Action, Comment, NextSpawn;
+	local bool SpawnAtPlayerStart;
 	
 	`ZS_Trace(`Location);
 	
@@ -530,7 +552,9 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 			}
 		}
 		
-		Spawned = SpawnZed(SE.ZedClass, PawnCount, SE.SpawnAtPlayerStart);
+		SpawnAtPlayerStart = (GlobalSpawnAtPlayerStart || (SpawnAtPlayerStartZeds.Find(SE.ZedClass) != INDEX_NONE));
+		
+		Spawned = SpawnZed(SE.ZedClass, PawnCount, SpawnAtPlayerStart);
 		if (Spawned == INDEX_NONE)
 		{
 			SpawnList[Index].Delay = 5.0f;
@@ -613,9 +637,10 @@ private function Vector PlayerStartLocation()
 	return KFGIS.FindPlayerStart(None, 0).Location;
 }
 
-private function int SpawnZed(class<KFPawn_Monster> ZedClass, int PawnCount, bool SpawnAtPlayerStart)
+private function int SpawnZed(class<KFPawn_Monster> ZedClass, int PawnCount, optional bool SpawnAtPlayerStart = false)
 {
 	local Array<class<KFPawn_Monster> > CustomSquad;
+	local ESquadType PrevDesiredSquadType;
 	local Vector SpawnLocation, PlayerStart;
 	local KFSpawnVolume SpawnVolume;
 	local KFPawn_Monster KFPM;
@@ -639,11 +664,17 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int PawnCount, boo
 			CustomSquad.AddItem(ZedClass);
 		}
 		
+		PrevDesiredSquadType = KFGIS.SpawnManager.DesiredSquadType;
+		KFGIS.SpawnManager.SetDesiredSquadTypeForZedList(CustomSquad);
 		SpawnVolume = KFGIS.SpawnManager.GetBestSpawnVolume(CustomSquad);
+		KFGIS.SpawnManager.DesiredSquadType = PrevDesiredSquadType;
+
 		if (SpawnVolume == None)
 		{
 			return INDEX_NONE;
 		}
+		
+		SpawnVolume.VolumeChosenCount++;
 		
 		SpawnLocation = SpawnVolume.Location;
 		if (SpawnLocation == PlayerStart)
@@ -677,6 +708,11 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int PawnCount, boo
 		Spawned++;
 	}
 	
+	if (Spawned > 0)
+	{
+		KFGIS.SpawnManager.LastAISpawnVolume = SpawnVolume;
+	}
+	
 	if (CfgSpawn.default.bShadowSpawn && !KFGIS.MyKFGRI.IsBossWave())
 	{
 		KFGIS.NumAIFinishedSpawning += Spawned;
@@ -690,21 +726,55 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int PawnCount, boo
 
 public function NotifyLogin(Controller C)
 {
-	local ZedSpawnerRepLink RepLink;
-	
 	`ZS_Trace(`Location);
-	
-	RepLink = Spawn(class'ZedSpawnerRepLink', C);
-	RepLink.LogLevel = LogLevel;
-	RepLink.CustomZeds = CustomZeds;
-	RepLink.ServerSync();
+
+	CreateRepLink(C);
 }
 
 public function NotifyLogout(Controller C)
 {
 	`ZS_Trace(`Location);
+
+	DestroyRepLink(C);
+}
+
+public function CreateRepLink(Controller C)
+{
+	local ZedSpawnerRepLink RepLink;
 	
-	return;
+	`ZS_Trace(`Location);
+	
+	if (C == None) return;
+	
+	RepLink = Spawn(class'ZedSpawnerRepLink', C);
+	RepLink.LogLevel = LogLevel;
+	RepLink.CustomZeds = CustomZeds;
+	RepLink.ZS = Self;
+	
+	RepLinks.AddItem(RepLink);
+	
+	RepLink.ServerSync();
+}
+
+public function bool DestroyRepLink(Controller C)
+{
+	local int i;
+	
+	`ZS_Trace(`Location);
+	
+	if (C == None) return false;
+	
+	for (i = RepLinks.Length - 1; i >= 0; --i)
+	{
+		if (RepLinks[i].Owner == C)
+		{
+			RepLinks[i].SafeDestroy();
+			RepLinks.Remove(i, 1);
+			return true;
+		}
+	}
+	
+	return false;
 }
 
 DefaultProperties
