@@ -1,3 +1,5 @@
+[img]https://img.shields.io/static/v1?logo=GitHub&labelColor=gray&color=blue&logoColor=white&label=&message=Open Source[/img] [img]https://img.shields.io/github/license/GenZmeY/KF2-ZedSpawner[/img] [img]https://img.shields.io/steam/subscriptions/2811290931[/img] [img]https://img.shields.io/steam/favorites/2811290931[/img] [img]https://img.shields.io/steam/update-date/2811290931[/img] [url=https://steamcommunity.com/sharedfiles/filedetails/changelog/2811290931][img]https://img.shields.io/github/v/tag/GenZmeY/KF2-ZedSpawner[/img][/url]
+
 [h1]Description[/h1]
 Spawner for zeds. Started as a modification of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2488241348]this version[/url], but now there is almost nothing left of the previous mutator, lol xD
 
@@ -9,24 +11,30 @@ Spawner for zeds. Started as a modification of [url=https://steamcommunity.com/s
 - spawn after a certain percentage of killed zeds.
 
 [h1]Whitelisted?[/h1]
-No. This mod is not whitelisted and will unrank your server. Any XP gained will not be saved.
+No. This mod is not whitelisted and will de-rank your server. Any XP gained will not be saved.
 
 [h1]Usage (single player)[/h1]
-1. Subscribe to this mutator;
-2. Start KF2; 
-3. Open console (`) and input:
+[olist]
+[*]Subscribe to this mutator;
+[*]Start KF2; 
+[*]Open console (`) and input:
 [b]open KF-BioticsLab?Mutator=ZedSpawner.ZedSpawnerMut[/b]
 (replace the map and add the parameters you need)
-4. <Enter>.
+[*]<Enter>.
+[/olist]
 
 [h1]Usage (server)[/h1]
 [b]Note:[/b] [i]If you don't understand what is written here, read the article [url=https://wiki.killingfloor2.com/index.php?title=Dedicated_Server_(Killing_Floor_2)][u]Dedicated Server (KF2 wiki)[/u][/url] before following these instructions.[/i]
-
-1. Open your [b]PCServer-KFEngine.ini[/b] / [b]LinuxServer-KFEngine.ini[/b];
-2. Add the following string to the [b][OnlineSubsystemSteamworks.KFWorkshopSteamworks][/b] section (create one if it doesn't exist):
+[olist]
+[*]Open your [b]PCServer-KFEngine.ini[/b] / [b]LinuxServer-KFEngine.ini[/b];
+[*]Find the [b][IpDrv.TcpNetDriver][/b] section and make sure that there is a line (add if not):
+[b]DownloadManagers=OnlineSubsystemSteamworks.SteamWorkshopDownload[/b]
+❗️ If there are several [b]DownloadManagers=[/b] then the line above should be the first ❗️
+[*]Add the following string to the [b][OnlineSubsystemSteamworks.KFWorkshopSteamworks][/b] section (create one if it doesn't exist):
 [b]ServerSubscribedWorkshopItems=2811290931[/b]
-3. Start the server and wait while the mutator is downloading;
-4. Add mutator to server start parameters: [b]?Mutator=ZedSpawner.ZedSpawnerMut[/b] and restart the server.
+[*]Start the server and wait while the mutator is downloading;
+[*]Add mutator to server start parameters: [b]?Mutator=ZedSpawner.ZedSpawnerMut[/b] and restart the server.
+[/olist]
 
 [h1]Setup[/h1]
 At the first start, the [b]KFZedSpawner.ini[/b] config will be created. There are already default settings and spawn lists, but you still need to change them because this is just an example.
@@ -61,7 +69,7 @@ Use the [b][ZedSpawner.SpawnListBossWaves][/b] and [b][ZedSpawner.SpawnListSpeci
 [h1]Spawn logic[/h1]
 I really tried to describe in text how it works, but every time I got some kind of crap. Therefore, I decided to explain it a little differently and made a small calculator for this. It is interactive, you can change the parameters and see what happens. It has all the necessary explanations, so I think you will quickly figure out how the spawner works.
 
-[h1]📌[url=https://redirect.genzmey.su/kf2-zedspawner-calc]Spawn calculator[/url][/h1]
+[url=https://redirect.genzmey.su/kf2-zedspawner-calc][img]https://img.shields.io/static/v1?message=Spawn%20Calculator&logo=Google%20Sheets&labelColor=34A853&color=gray&logoColor=white&label=Google%20Sheets%20[/img][/url]
 [i]Just please try not to interfere with each other if you see that someone is already using a calculator.[/i]
 
 [h1]Sources[/h1]
