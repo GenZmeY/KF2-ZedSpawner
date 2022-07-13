@@ -11,6 +11,7 @@ var public config float SingleSpawnLimitMultiplier;
 var public config float SingleSpawnLimitPlayerMultiplier;
 var public config float SingleSpawnLimitCycleMultiplier;
 var public config int   AliveSpawnLimit;
+var public config bool  bSmoothSpawn;
 
 public static function InitConfig(int Version, int LatestVersion)
 {
@@ -18,6 +19,9 @@ public static function InitConfig(int Version, int LatestVersion)
 	{
 		case `NO_CONFIG:
 			ApplyDefault();
+			
+		case 3:
+			default.bSmoothSpawn = false;
 			
 		default: break;
 	}
@@ -32,6 +36,7 @@ private static function ApplyDefault()
 {
 	default.bCyclicalSpawn                   = true;
 	default.bShadowSpawn                     = true;
+	default.bSmoothSpawn                     = true;
 	default.ZedTotalMultiplier               = 1.0;
 	default.SpawnTotalPlayerMultiplier       = 0.75;
 	default.SpawnTotalCycleMultiplier        = 0.75;

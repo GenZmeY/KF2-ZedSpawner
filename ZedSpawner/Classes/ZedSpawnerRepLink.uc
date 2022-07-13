@@ -13,7 +13,6 @@ replication
 
 public simulated function bool SafeDestroy()
 {
-	`Log_Debug(`Location @ "bPendingDelete:" @ bPendingDelete @ "bDeleteMe" @ bDeleteMe);
 	return (bPendingDelete || bDeleteMe || Destroy());
 }
 

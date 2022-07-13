@@ -1,7 +1,7 @@
 class ZedSpawner extends Info
 	config(ZedSpawner);
 
-const LatestVersion = 3;
+const LatestVersion = 4;
 
 const CfgSpawn              = class'Spawn';
 const CfgSpawnAtPlayerStart = class'SpawnAtPlayerStart';
@@ -26,6 +26,7 @@ struct S_SpawnEntry
 	var int    PawnsTotal;
 	var bool   ForceSpawn;
 	var String ZedNameFiller;
+	var int    SmoothPawnPool;
 };
 
 var private config int        Version;
@@ -118,6 +119,7 @@ private function InitConfig()
 			Tickrate = 1.0f;
 			
 		case 2:
+		case 3:
 
 		case MaxInt:
 			`Log_Info("Config updated to version"@LatestVersion);
@@ -514,6 +516,7 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 	SE = SpawnList[Index];
 	
 	SpawnList[Index].Delay = float(SE.DelayDefault);
+	
 	if (FRand() <= SE.Probability || SE.ForceSpawn)
 	{
 		if (SE.SingleSpawnLimit == 0 || SE.PawnsLeft < SE.SingleSpawnLimit)
@@ -523,6 +526,15 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 		else
 		{
 			PawnCount = SE.SingleSpawnLimit;
+		}
+		
+		if (CfgSpawn.default.bSmoothSpawn)
+		{
+			if (SE.SmoothPawnPool <= 0)
+			{
+				SpawnList[Index].SmoothPawnPool = PawnCount;
+			}
+			PawnCount = 1;
 		}
 		
 		if (CfgSpawn.default.bShadowSpawn && !KFGIS.MyKFGRI.IsBossWave())
@@ -558,9 +570,26 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 		}
 		else
 		{
-			SpawnList[Index].ForceSpawn = false;
 			Action  = "Spawned";
 			Comment = "x" $ Spawned;
+			if (CfgSpawn.default.bSmoothSpawn)
+			{
+				SpawnList[Index].SmoothPawnPool -= Spawned;
+				if (SpawnList[Index].SmoothPawnPool > 0)
+				{
+					SpawnList[Index].Delay = 1.0f;
+					SpawnList[Index].ForceSpawn = true;
+				}
+				else
+				{
+					SpawnList[Index].Delay = float(SE.DelayDefault);
+					SpawnList[Index].ForceSpawn = false;
+				}
+			}
+			else
+			{
+				SpawnList[Index].ForceSpawn = false;
+			}
 		}
 	}
 	else
@@ -573,7 +602,14 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 	SpawnList[Index].PawnsLeft -= Spawned;
 	if (SpawnList[Index].PawnsLeft > 0)
 	{
-		NextSpawn = "next after" @ SE.DelayDefault $ "sec," @ "pawns left:" @ SpawnList[Index].PawnsLeft;
+		if (CfgSpawn.default.bSmoothSpawn && SpawnList[Index].SmoothPawnPool > 0)
+		{
+			NextSpawn = "next after" @ Round(SpawnList[Index].Delay) $ "sec," @ "pawns left:" @ SpawnList[Index].SmoothPawnPool @ "(" $ SpawnList[Index].PawnsLeft $ ")";
+		}
+		else
+		{
+			NextSpawn = "next after" @ SE.DelayDefault $ "sec," @ "pawns left:" @ SpawnList[Index].PawnsLeft;
+		}
 	}
 	SpawnLog(SE, Action, Comment, NextSpawn);
 }
@@ -715,7 +751,7 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int PawnCount, opt
 public function NotifyLogin(Controller C)
 {
 	`Log_Trace(`Location);
-	`Log_Info(`Location);
+
 	CreateRepLink(C);
 }
 
