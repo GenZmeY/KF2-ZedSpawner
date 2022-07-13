@@ -11,19 +11,19 @@ public event PreBeginPlay()
 	
 	foreach WorldInfo.DynamicActors(class'ZedSpawner', ZS)
 	{
-		`ZS_Log("Found 'ZedSpawner'");
+		`Log_Base("Found 'ZedSpawner'");
 		break;
 	}
 	
 	if (ZS == None)
 	{
-		`ZS_Log("Spawn 'ZedSpawner'");
+		`Log_Base("Spawn 'ZedSpawner'");
 		ZS = WorldInfo.Spawn(class'ZedSpawner');
 	}
 	
 	if (ZS == None)
 	{
-		`ZS_Log("Can't Spawn 'ZedSpawner', Destroy...");
+		`Log_Base("Can't Spawn 'ZedSpawner', Destroy...");
 		Destroy();
 	}
 }

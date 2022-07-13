@@ -62,7 +62,7 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 	local int                 Line;
 	local bool                Errors;
 	
-	`ZS_Info("Load boss waves spawn list:");
+	`Log_Info("Load boss waves spawn list:");
 	foreach default.Spawn(SpawnEntryCfg, Line)
 	{
 		Errors = false;
@@ -70,14 +70,14 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 		SpawnEntry.BossClass = class<KFPawn_Monster>(DynamicLoadObject(SpawnEntryCfg.BossClass, class'Class'));
 		if (SpawnEntry.BossClass == None)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Can't load boss class:" @ SpawnEntryCfg.BossClass);
+			`Log_Warn("[" $ Line + 1 $ "]" @ "Can't load boss class:" @ SpawnEntryCfg.BossClass);
 			Errors = true;
 		}
 		
 		SpawnEntry.ZedClass = class<KFPawn_Monster>(DynamicLoadObject(SpawnEntryCfg.ZedClass, class'Class'));
 		if (SpawnEntry.ZedClass == None)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Can't load zed class:" @ SpawnEntryCfg.ZedClass);
+			`Log_Warn("[" $ Line + 1 $ "]" @ "Can't load zed class:" @ SpawnEntryCfg.ZedClass);
 			Errors = true;
 		}
 		
@@ -86,45 +86,45 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 		SpawnEntry.DelayDefault = SpawnEntryCfg.Delay;
 		if (SpawnEntryCfg.Delay <= 0)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Delay" @ "(" $ SpawnEntryCfg.Delay $ ")" @ "must be greater than 0");
+			`Log_Warn("[" $ Line + 1 $ "]" @ "Delay" @ "(" $ SpawnEntryCfg.Delay $ ")" @ "must be greater than 0");
 			Errors = true;
 		}
 		
 		SpawnEntry.Probability = SpawnEntryCfg.Probability / 100.f;
 		if (SpawnEntryCfg.Probability <= 0 || SpawnEntryCfg.Probability > 100)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "Probability" @ "(" $ SpawnEntryCfg.Probability $ ")" @ "must be greater than 0 and less than or equal 100");
+			`Log_Warn("[" $ Line + 1 $ "]" @ "Probability" @ "(" $ SpawnEntryCfg.Probability $ ")" @ "must be greater than 0 and less than or equal 100");
 			Errors = true;
 		}
 
 		SpawnEntry.SpawnCountBase = SpawnEntryCfg.SpawnCountBase;
 		if (SpawnEntry.SpawnCountBase <= 0)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "SpawnCountBase" @ "(" $ SpawnEntryCfg.SpawnCountBase $ ")" @ "must be greater than 0");
+			`Log_Warn("[" $ Line + 1 $ "]" @ "SpawnCountBase" @ "(" $ SpawnEntryCfg.SpawnCountBase $ ")" @ "must be greater than 0");
 			Errors = true;
 		}
 		
 		SpawnEntry.SingleSpawnLimitDefault = SpawnEntryCfg.SingleSpawnLimit;
 		if (SpawnEntry.SingleSpawnLimit < 0)
 		{
-			`ZS_Warn("[" $ Line + 1 $ "]" @ "SingleSpawnLimit" @ "(" $ SpawnEntryCfg.SingleSpawnLimit $ ")" @ "must be equal or greater than 0");
+			`Log_Warn("[" $ Line + 1 $ "]" @ "SingleSpawnLimit" @ "(" $ SpawnEntryCfg.SingleSpawnLimit $ ")" @ "must be equal or greater than 0");
 			Errors = true;
 		}
 		
 		if (!Errors)
 		{
 			SpawnList.AddItem(SpawnEntry);
-			`ZS_Debug("[" $ Line + 1 $ "]" @ "Loaded successfully: (" $ SpawnEntryCfg.BossClass $ ")" @ SpawnEntryCfg.ZedClass);
+			`Log_Debug("[" $ Line + 1 $ "]" @ "Loaded successfully: (" $ SpawnEntryCfg.BossClass $ ")" @ SpawnEntryCfg.ZedClass);
 		}
 	}
 	
 	if (SpawnList.Length == default.Spawn.Length)
 	{
-		`ZS_Info("Boss spawn list loaded successfully (" $ default.Spawn.Length @ "entries)");
+		`Log_Info("Boss spawn list loaded successfully (" $ default.Spawn.Length @ "entries)");
 	}
 	else
 	{
-		`ZS_Info("Boss spawn list: loaded" @ SpawnList.Length @ "of" @ default.Spawn.Length @ "entries");
+		`Log_Info("Boss spawn list: loaded" @ SpawnList.Length @ "of" @ default.Spawn.Length @ "entries");
 	}
 	
 	return SpawnList;

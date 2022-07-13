@@ -13,15 +13,15 @@ replication
 
 public simulated function bool SafeDestroy()
 {
-	`ZS_Debug(`Location @ "bPendingDelete:" @ bPendingDelete @ "bDeleteMe" @ bDeleteMe);
+	`Log_Debug(`Location @ "bPendingDelete:" @ bPendingDelete @ "bDeleteMe" @ bDeleteMe);
 	return (bPendingDelete || bDeleteMe || Destroy());
 }
 
 public reliable client function ClientSync(class<KFPawn_Monster> CustomZed)
 {
-	`ZS_Trace(`Location);
+	`Log_Trace(`Location);
 	
-	`ZS_Debug("Received:" @ CustomZed);
+	`Log_Debug("Received:" @ CustomZed);
 	CustomZeds.AddItem(CustomZed);
 	ServerSync();
 }
@@ -30,11 +30,11 @@ public reliable client function SyncFinished()
 {
 	local class<KFPawn_Monster> CustomZed;
 	
-	`ZS_Trace(`Location);
+	`Log_Trace(`Location);
 	
 	foreach CustomZeds(CustomZed)
 	{
-		`ZS_Debug("Preload Content for" @ CustomZed);
+		`Log_Debug("Preload Content for" @ CustomZed);
 		CustomZed.static.PreloadContent();
 	}
 	
@@ -43,13 +43,13 @@ public reliable client function SyncFinished()
 
 public reliable server function ServerSync()
 {
-	`ZS_Trace(`Location);
+	`Log_Trace(`Location);
 	
 	if (bPendingDelete || bDeleteMe) return;
 	
 	if (CustomZeds.Length == Recieved || WorldInfo.NetMode == NM_StandAlone)
 	{
-		`ZS_Debug("Sync finished");
+		`Log_Debug("Sync finished");
 		SyncFinished();
 		if (!ZS.DestroyRepLink(Controller(Owner)))
 		{
@@ -58,7 +58,7 @@ public reliable server function ServerSync()
 	}
 	else
 	{
-		`ZS_Debug("Sync:" @ CustomZeds[Recieved]);
+		`Log_Debug("Sync:" @ CustomZeds[Recieved]);
 		ClientSync(CustomZeds[Recieved++]);
 	}
 }
