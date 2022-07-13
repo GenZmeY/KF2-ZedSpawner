@@ -48,6 +48,9 @@ Using the [b]SpawnTotalCycleMultiplier[/b] and [b]SingleSpawnLimitCycleMultiplie
 With [b]bShadowSpawn=True[/b], the zeds from the list will replace the original zeds that haven't spawned yet, so the counter of the remaining zeds won't grow. Spawning will stop when there are no unspawned zeds left.
 With [b]bShadowSpawn=False[/b] zeds from the spawn list will not replace the original ones. The counter of remaining zeds will increase when spawning. Spawn will continue until the end of the wave.
 
+[b]Smooth spawn[/b]
+With [b]bSmoothSpawn=True[/b] a group of zeds will spawn gradually (1 zed per second);
+
 [b]AliveSpawnLimit[/b]
 If you have a server crash with a large number of zeds, set [b]AliveSpawnLimit[/b]. If the number of live zeds reaches the specified limit, spawning will be stopped until there are fewer zeds. At zero there is no limit.
 
