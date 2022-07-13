@@ -61,7 +61,6 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 	local S_SpawnEntry        SpawnEntry;
 	local int                 Line;
 	local bool                Errors;
-	local int                 Loaded;
 	
 	`ZS_Info("Load boss waves spawn list:");
 	foreach default.Spawn(SpawnEntryCfg, Line)
@@ -114,19 +113,18 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 		
 		if (!Errors)
 		{
-			Loaded++;
 			SpawnList.AddItem(SpawnEntry);
 			`ZS_Debug("[" $ Line + 1 $ "]" @ "Loaded successfully: (" $ SpawnEntryCfg.BossClass $ ")" @ SpawnEntryCfg.ZedClass);
 		}
 	}
 	
-	if (Loaded == default.Spawn.Length)
+	if (SpawnList.Length == default.Spawn.Length)
 	{
 		`ZS_Info("Boss spawn list loaded successfully (" $ default.Spawn.Length @ "entries)");
 	}
 	else
 	{
-		`ZS_Info("Boss spawn list: loaded" @ Loaded @ "of" @ default.Spawn.Length @ "entries");
+		`ZS_Info("Boss spawn list: loaded" @ SpawnList.Length @ "of" @ default.Spawn.Length @ "entries");
 	}
 	
 	return SpawnList;

@@ -727,7 +727,7 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int PawnCount, opt
 public function NotifyLogin(Controller C)
 {
 	`ZS_Trace(`Location);
-
+	`ZS_Info(`Location);
 	CreateRepLink(C);
 }
 
@@ -738,15 +738,18 @@ public function NotifyLogout(Controller C)
 	DestroyRepLink(C);
 }
 
-public function CreateRepLink(Controller C)
+public function bool CreateRepLink(Controller C)
 {
 	local ZedSpawnerRepLink RepLink;
 	
 	`ZS_Trace(`Location);
 	
-	if (C == None) return;
+	if (C == None) return false;
 	
 	RepLink = Spawn(class'ZedSpawnerRepLink', C);
+	
+	if (RepLink == None) return false;
+	
 	RepLink.LogLevel = LogLevel;
 	RepLink.CustomZeds = CustomZeds;
 	RepLink.ZS = Self;
@@ -754,22 +757,24 @@ public function CreateRepLink(Controller C)
 	RepLinks.AddItem(RepLink);
 	
 	RepLink.ServerSync();
+	
+	return true;
 }
 
 public function bool DestroyRepLink(Controller C)
 {
-	local int i;
+	local ZedSpawnerRepLink RepLink;
 	
 	`ZS_Trace(`Location);
 	
 	if (C == None) return false;
 	
-	for (i = RepLinks.Length - 1; i >= 0; --i)
+	foreach RepLinks(RepLink)
 	{
-		if (RepLinks[i].Owner == C)
+		if (RepLink.Owner == C)
 		{
-			RepLinks[i].SafeDestroy();
-			RepLinks.Remove(i, 1);
+			RepLink.SafeDestroy();
+			RepLinks.RemoveItem(RepLink);
 			return true;
 		}
 	}

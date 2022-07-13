@@ -3,7 +3,7 @@ class ZedSpawnerMut extends KFMutator
 	
 var private ZedSpawner ZS;
 
-event PreBeginPlay()
+public event PreBeginPlay()
 {
     Super.PreBeginPlay();
 	
@@ -38,14 +38,14 @@ public function AddMutator(Mutator Mut)
 		Super.AddMutator(Mut);
 }
 
-function NotifyLogin(Controller C)
+public function NotifyLogin(Controller C)
 {
 	Super.NotifyLogin(C);
 	
 	ZS.NotifyLogin(C);
 }
 
-function NotifyLogout(Controller C)
+public function NotifyLogout(Controller C)
 {
 	Super.NotifyLogout(C);
 	

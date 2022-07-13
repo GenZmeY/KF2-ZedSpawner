@@ -39,9 +39,7 @@ public static function Array<class<KFPawn_Monster> > Load(E_LogLevel LogLevel)
 	local Array<class<KFPawn_Monster> > ZedList;
 	local class<KFPawn_Monster> KFPMC;
 	local String ZedClassTmp;
-	local int Line, Loaded;
-	
-	Loaded = 0;
+	local int Line;
 	
 	`ZS_Info("Load zeds to spawn at player start:");
 	foreach default.ZedClass(ZedClassTmp, Line)
@@ -53,19 +51,18 @@ public static function Array<class<KFPawn_Monster> > Load(E_LogLevel LogLevel)
 		}
 		else
 		{
-			Loaded++;
 			ZedList.AddItem(KFPMC);
 			`ZS_Debug("[" $ Line + 1 $ "]" @ "Loaded successfully:" @ ZedClassTmp);
 		}
 	}
 	
-	if (Loaded == default.ZedClass.Length)
+	if (ZedList.Length == default.ZedClass.Length)
 	{
 		`ZS_Info("Spawn at player start list (Zeds) loaded successfully (" $ default.ZedClass.Length @ "entries)");
 	}
 	else
 	{
-		`ZS_Info("Spawn at player start list (Zeds): loaded" @ Loaded @ "of" @ default.ZedClass.Length @ "entries");
+		`ZS_Info("Spawn at player start list (Zeds): loaded" @ ZedList.Length @ "of" @ default.ZedClass.Length @ "entries");
 	}
 	
 	return ZedList;
