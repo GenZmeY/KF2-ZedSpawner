@@ -18,7 +18,7 @@ public simulated function bool SafeDestroy()
 
 public reliable client function ClientSync(class<KFPawn_Monster> CustomZed)
 {
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	`Log_Debug("Received:" @ CustomZed);
 	CustomZeds.AddItem(CustomZed);
@@ -29,7 +29,7 @@ public reliable client function SyncFinished()
 {
 	local class<KFPawn_Monster> CustomZed;
 	
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	foreach CustomZeds(CustomZed)
 	{
@@ -42,7 +42,7 @@ public reliable client function SyncFinished()
 
 public reliable server function ServerSync()
 {
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	if (bPendingDelete || bDeleteMe) return;
 	

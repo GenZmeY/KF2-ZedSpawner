@@ -20,12 +20,14 @@ delegate int SpawnListSort(S_SpawnEntryCfg A, S_SpawnEntryCfg B)
 	return A.Wave > B.Wave ? -1 : 0;
 }
 
-public static function InitConfig(int Version, int LatestVersion, KFGI_Access KFGIA)
+public static function InitConfig(int Version, int LatestVersion, KFGI_Access KFGIA, E_LogLevel LogLevel)
 {
+	`Log_TraceStatic();
+	
 	switch (Version)
 	{
 		case `NO_CONFIG:
-			ApplyDefault(KFGIA);
+			ApplyDefault(KFGIA, LogLevel);
 			
 		default: break;
 	}
@@ -36,11 +38,13 @@ public static function InitConfig(int Version, int LatestVersion, KFGI_Access KF
 	}
 }
 
-private static function ApplyDefault(KFGI_Access KFGIA)
+private static function ApplyDefault(KFGI_Access KFGIA, E_LogLevel LogLevel)
 {
 	local S_SpawnEntryCfg               SpawnEntry;
 	local Array<class<KFPawn_Monster> > KFPM_Zeds;
 	local class<KFPawn_Monster>         KFPMC;
+	
+	`Log_TraceStatic();
 	
 	default.Spawn.Length = 0;
 	
@@ -51,7 +55,7 @@ private static function ApplyDefault(KFGI_Access KFGIA)
 	SpawnEntry.Delay               = 60;
 	SpawnEntry.Probability         = 100;
 
-	KFPM_Zeds = KFGIA.GetAIClassList();
+	KFPM_Zeds = KFGIA.GetAIClassList(LogLevel);
 	foreach KFPM_Zeds(KFPMC)
 	{
 		++SpawnEntry.Wave;
@@ -67,6 +71,8 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 	local S_SpawnEntry        SpawnEntry;
 	local int                 Line;
 	local bool                Errors;
+	
+	`Log_TraceStatic();
 	
 	`Log_Info("Load spawn list:");
 	foreach default.Spawn(SpawnEntryCfg, Line)

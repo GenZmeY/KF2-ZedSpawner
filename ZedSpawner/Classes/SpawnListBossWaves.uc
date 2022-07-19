@@ -15,12 +15,14 @@ struct S_SpawnEntryCfg
 var public  config bool                   bStopRegularSpawn;
 var private config Array<S_SpawnEntryCfg> Spawn;
 
-public static function InitConfig(int Version, int LatestVersion, KFGI_Access KFGIA)
+public static function InitConfig(int Version, int LatestVersion, KFGI_Access KFGIA, E_LogLevel LogLevel)
 {
+	`Log_TraceStatic();
+	
 	switch (Version)
 	{
 		case `NO_CONFIG:
-			ApplyDefault(KFGIA);
+			ApplyDefault(KFGIA, LogLevel);
 			
 		default: break;
 	}
@@ -31,11 +33,13 @@ public static function InitConfig(int Version, int LatestVersion, KFGI_Access KF
 	}
 }
 
-private static function ApplyDefault(KFGI_Access KFGIA)
+private static function ApplyDefault(KFGI_Access KFGIA, E_LogLevel LogLevel)
 {
 	local S_SpawnEntryCfg               SpawnEntry;
 	local Array<class<KFPawn_Monster> > KFPM_Bosses;
 	local class<KFPawn_Monster>         KFPMC;
+	
+	`Log_TraceStatic();
 	
 	default.Spawn.Length = 0;
 	
@@ -46,7 +50,7 @@ private static function ApplyDefault(KFGI_Access KFGIA)
 	SpawnEntry.SingleSpawnLimit    = 1;
 	SpawnEntry.Delay               = 30;
 	SpawnEntry.Probability         = 100;
-	KFPM_Bosses = KFGIA.GetAIBossClassList();
+	KFPM_Bosses = KFGIA.GetAIBossClassList(LogLevel);
 	foreach KFPM_Bosses(KFPMC)
 	{
 		SpawnEntry.BossClass = "KFGameContent." $ String(KFPMC);
@@ -61,6 +65,8 @@ public static function Array<S_SpawnEntry> Load(E_LogLevel LogLevel)
 	local S_SpawnEntry        SpawnEntry;
 	local int                 Line;
 	local bool                Errors;
+	
+	`Log_TraceStatic();
 	
 	`Log_Info("Load boss waves spawn list:");
 	foreach default.Spawn(SpawnEntryCfg, Line)

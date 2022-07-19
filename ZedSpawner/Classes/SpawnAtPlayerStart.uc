@@ -5,13 +5,15 @@ class SpawnAtPlayerStart extends Object
 var private config Array<String> ZedClass;
 var public  config Array<String> Map;
 
-public static function InitConfig(int Version, int LatestVersion)
+public static function InitConfig(int Version, int LatestVersion, E_LogLevel LogLevel)
 {
+	`Log_TraceStatic();
+	
 	switch (Version)
 	{
 		case `NO_CONFIG:
 		case 2:
-			ApplyDefault();
+			ApplyDefault(LogLevel);
 			
 		default: break;
 	}
@@ -22,8 +24,10 @@ public static function InitConfig(int Version, int LatestVersion)
 	}
 }
 
-private static function ApplyDefault()
+private static function ApplyDefault(E_LogLevel LogLevel)
 {
+	`Log_TraceStatic();
+	
 	default.ZedClass.Length = 0;
 	default.ZedClass.AddItem("HL2Monsters.Combine_Strider");
 	default.ZedClass.AddItem("HL2Monsters.Combine_Gunship");
@@ -40,6 +44,8 @@ public static function Array<class<KFPawn_Monster> > Load(E_LogLevel LogLevel)
 	local class<KFPawn_Monster> KFPMC;
 	local String ZedClassTmp;
 	local int Line;
+	
+	`Log_TraceStatic();
 	
 	`Log_Info("Load zeds to spawn at player start:");
 	foreach default.ZedClass(ZedClassTmp, Line)

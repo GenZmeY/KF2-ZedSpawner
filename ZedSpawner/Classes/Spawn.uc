@@ -13,12 +13,14 @@ var public config float SingleSpawnLimitCycleMultiplier;
 var public config int   AliveSpawnLimit;
 var public config bool  bSmoothSpawn;
 
-public static function InitConfig(int Version, int LatestVersion)
+public static function InitConfig(int Version, int LatestVersion, E_LogLevel LogLevel)
 {
+	`Log_TraceStatic();
+	
 	switch (Version)
 	{
 		case `NO_CONFIG:
-			ApplyDefault();
+			ApplyDefault(LogLevel);
 			
 		case 3:
 			default.bSmoothSpawn = false;
@@ -32,8 +34,10 @@ public static function InitConfig(int Version, int LatestVersion)
 	}
 }
 
-private static function ApplyDefault()
+private static function ApplyDefault(E_LogLevel LogLevel)
 {
+	`Log_TraceStatic();
+	
 	default.bCyclicalSpawn                   = true;
 	default.bShadowSpawn                     = true;
 	default.bSmoothSpawn                     = true;
@@ -49,6 +53,8 @@ private static function ApplyDefault()
 public static function bool Load(E_LogLevel LogLevel)
 {
 	local bool Errors;
+	
+	`Log_TraceStatic();
 	
 	if (default.ZedTotalMultiplier <= 0.f)
 	{

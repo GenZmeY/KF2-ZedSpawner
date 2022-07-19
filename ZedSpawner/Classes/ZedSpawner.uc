@@ -73,7 +73,7 @@ public simulated function bool SafeDestroy()
 
 public event PreBeginPlay()
 {
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	if (WorldInfo.NetMode == NM_Client)
 	{
@@ -87,7 +87,7 @@ public event PreBeginPlay()
 
 public event PostBeginPlay()
 {
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	if (bPendingDelete || bDeleteMe) return;
 	
@@ -104,11 +104,11 @@ private function InitConfig()
 		SaveConfig();
 	}
 	
-	CfgSpawn.static.InitConfig(Version, LatestVersion);
-	CfgSpawnAtPlayerStart.static.InitConfig(Version, LatestVersion);
-	CfgSpawnListRW.static.InitConfig(Version, LatestVersion, KFGIA);
-	CfgSpawnListBW.static.InitConfig(Version, LatestVersion, KFGIA);
-	CfgSpawnListSW.static.InitConfig(Version, LatestVersion);
+	CfgSpawn.static.InitConfig(Version, LatestVersion, LogLevel);
+	CfgSpawnAtPlayerStart.static.InitConfig(Version, LatestVersion, LogLevel);
+	CfgSpawnListRW.static.InitConfig(Version, LatestVersion, KFGIA, LogLevel);
+	CfgSpawnListBW.static.InitConfig(Version, LatestVersion, KFGIA, LogLevel);
+	CfgSpawnListSW.static.InitConfig(Version, LatestVersion, LogLevel);
 	
 	switch (Version)
 	{
@@ -148,7 +148,7 @@ private function Init()
 	local S_SpawnEntry SE;
 	local String CurrentMap;
 	
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	KFGIS = KFGameInfo_Survival(WorldInfo.Game);
 	if (KFGIS == None)
@@ -220,6 +220,8 @@ private function PreloadContent()
 {
 	local class<KFPawn_Monster> PawnClass;
 	
+	`Log_Trace();
+	
 	ExtractCustomZedsFromSpawnList(SpawnListRW, CustomZeds);
 	ExtractCustomZedsFromSpawnList(SpawnListBW, CustomZeds);
 	ExtractCustomZedsFromSpawnList(SpawnListSW, CustomZeds);
@@ -235,10 +237,12 @@ private function ExtractCustomZedsFromSpawnList(Array<S_SpawnEntry> SpawnList, o
 {
 	local S_SpawnEntry SE;
 	
+	`Log_Trace();
+	
 	foreach SpawnList(SE)
 	{
 		if (Out.Find(SE.ZedClass) == INDEX_NONE
-		&&  KFGIA.IsCustomZed(SE.ZedClass))
+		&&  KFGIA.IsCustomZed(SE.ZedClass, LogLevel))
 		{
 			Out.AddItem(SE.ZedClass);
 		}
@@ -251,7 +255,7 @@ private function SpawnTimer()
 	local int          Index;
 	local float        Threshold;
 	
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	if (KFGIS.WaveNum != 0 && CurrentWave < KFGIS.WaveNum)
 	{
@@ -323,7 +327,7 @@ private function SetupWave()
 	local S_SpawnEntry  SE;
 	local EAIType       SWType;
 	
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	if (CfgSpawn.default.bCyclicalSpawn && KFGIS.WaveNum > 1 && KFGIS.WaveNum == CycleWaveShift + CycleWaveSize * CurrentCycle)
 	{
@@ -350,7 +354,7 @@ private function SetupWave()
 	
 	if (KFGIS.MyKFGRI.IsBossWave())
 	{
-		CurrentBossClass = KFGIA.BossAITypePawn(EBossAIType(KFGIS.MyKFGRI.BossIndex));
+		CurrentBossClass = KFGIA.BossAITypePawn(EBossAIType(KFGIS.MyKFGRI.BossIndex), LogLevel);
 		if (CurrentBossClass == None)
 		{
 			`Log_Error("Can't determine boss class. Boss index:" @ KFGIS.MyKFGRI.BossIndex);
@@ -432,7 +436,7 @@ private function AdjustSpawnList(out Array<S_SpawnEntry> List)
 	local float PawnTotalF, PawnLimitF;
 	local int ZedNameMaxLength;
 	
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	Cycle   = float(CurrentCycle);
 	Players = float(PlayerCount());
@@ -487,7 +491,7 @@ private function SpawnTimerLogger(bool Stop, optional String Comment)
 {
 	local String Message;
 	
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	if (Stop)
 		Message = "Stop spawn";
@@ -511,7 +515,7 @@ private function SpawnEntry(out Array<S_SpawnEntry> SpawnList, int Index)
 	local String Action, Comment, NextSpawn;
 	local bool SpawnAtPlayerStart;
 	
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	SE = SpawnList[Index];
 	
@@ -628,7 +632,7 @@ private function int PlayerCount()
 	local int HumanPlayers;
 	local KFOnlineGameSettings KFGameSettings;
 	
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	if (KFGIS.PlayfabInter != None && KFGIS.PlayfabInter.GetGameSettings() != None)
 	{
@@ -653,7 +657,7 @@ private function Vector PlayerStartLocation()
 {
 	local PlayerController PC;
 	
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	foreach WorldInfo.AllControllers(class'PlayerController', PC)
 		return KFGIS.FindPlayerStart(PC, 0).Location;
@@ -672,7 +676,7 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int PawnCount, opt
 	local int Failed, Spawned;
 	local int Index;
 	
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	PlayerStart = PlayerStartLocation();
 	if (SpawnAtPlayerStart)
@@ -750,14 +754,14 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int PawnCount, opt
 
 public function NotifyLogin(Controller C)
 {
-	`Log_Trace(`Location);
+	`Log_Trace();
 
 	CreateRepLink(C);
 }
 
 public function NotifyLogout(Controller C)
 {
-	`Log_Trace(`Location);
+	`Log_Trace();
 
 	DestroyRepLink(C);
 }
@@ -766,7 +770,7 @@ public function bool CreateRepLink(Controller C)
 {
 	local ZedSpawnerRepLink RepLink;
 	
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	if (C == None) return false;
 	
@@ -789,7 +793,7 @@ public function bool DestroyRepLink(Controller C)
 {
 	local ZedSpawnerRepLink RepLink;
 	
-	`Log_Trace(`Location);
+	`Log_Trace();
 	
 	if (C == None) return false;
 	

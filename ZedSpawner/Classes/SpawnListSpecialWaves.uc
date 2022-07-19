@@ -16,12 +16,14 @@ struct S_SpawnEntryCfg
 var public  config bool bStopRegularSpawn;
 var private config Array<S_SpawnEntryCfg> Spawn;
 
-public static function InitConfig(int Version, int LatestVersion)
+public static function InitConfig(int Version, int LatestVersion, E_LogLevel LogLevel)
 {
+	`Log_TraceStatic();
+	
 	switch (Version)
 	{
 		case `NO_CONFIG:
-			ApplyDefault();
+			ApplyDefault(LogLevel);
 			
 		default: break;
 	}
@@ -32,10 +34,12 @@ public static function InitConfig(int Version, int LatestVersion)
 	}
 }
 
-private static function ApplyDefault()
+private static function ApplyDefault(E_LogLevel LogLevel)
 {
 	local S_SpawnEntryCfg SpawnEntry;
 	local EAIType         AIType;
+	
+	`Log_TraceStatic();
 	
 	default.bStopRegularSpawn = true;
 	default.Spawn.Length = 0;
@@ -59,6 +63,8 @@ public static function Array<S_SpawnEntry> Load(KFGameInfo_Endless KFGIE, E_LogL
 	local S_SpawnEntry        SpawnEntry;
 	local int                 Line;
 	local bool                Errors;
+	
+	`Log_TraceStatic();
 	
 	if (KFGIE == None)
 	{

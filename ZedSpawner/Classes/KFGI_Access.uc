@@ -1,10 +1,12 @@
 class KFGI_Access extends Object
 	within KFGameInfo;
 
-public function Array<class<KFPawn_Monster> > GetAIClassList()
+public function Array<class<KFPawn_Monster> > GetAIClassList(E_LogLevel LogLevel)
 {
 	local Array<class<KFPawn_Monster> > RV;
 	local class<KFPawn_Monster> KFPMC;
+	
+	`Log_Trace();
 	
 	foreach AIClassList(KFPMC)
 		RV.AddItem(KFPMC);
@@ -12,10 +14,12 @@ public function Array<class<KFPawn_Monster> > GetAIClassList()
 	return RV;
 }
 
-public function Array<class<KFPawn_Monster> > GetNonSpawnAIClassList()
+public function Array<class<KFPawn_Monster> > GetNonSpawnAIClassList(E_LogLevel LogLevel)
 {
 	local Array<class<KFPawn_Monster> > RV;
 	local class<KFPawn_Monster> KFPMC;
+	
+	`Log_Trace();
 	
 	foreach NonSpawnAIClassList(KFPMC)
 		RV.AddItem(KFPMC);
@@ -23,10 +27,12 @@ public function Array<class<KFPawn_Monster> > GetNonSpawnAIClassList()
 	return RV;
 }
 
-public function Array<class<KFPawn_Monster> > GetAIBossClassList()
+public function Array<class<KFPawn_Monster> > GetAIBossClassList(E_LogLevel LogLevel)
 {
 	local Array<class<KFPawn_Monster> > RV;
 	local class<KFPawn_Monster> KFPMC;
+	
+	`Log_Trace();
 	
 	foreach AIBossClassList(KFPMC)
 		RV.AddItem(KFPMC);
@@ -34,7 +40,7 @@ public function Array<class<KFPawn_Monster> > GetAIBossClassList()
 	return RV;
 }
 
-public function bool IsCustomZed(class<KFPawn_Monster> KFPM)
+public function bool IsCustomZed(class<KFPawn_Monster> KFPM, E_LogLevel LogLevel)
 {
 	if (AIClassList.Find(KFPM)         != INDEX_NONE) return false;
 	if (NonSpawnAIClassList.Find(KFPM) != INDEX_NONE) return false;
@@ -42,9 +48,11 @@ public function bool IsCustomZed(class<KFPawn_Monster> KFPM)
 	return true;
 }
 
-public function bool IsOriginalAI(class<KFPawn_Monster> KFPM, optional out EAIType AIType)
+public function bool IsOriginalAI(class<KFPawn_Monster> KFPM, optional out EAIType AIType, optional E_LogLevel LogLevel = LL_None)
 {
 	local int Type;
+	
+	`Log_Trace();
 	
 	Type = AIClassList.Find(KFPM);
 	if (Type != INDEX_NONE)
@@ -56,9 +64,11 @@ public function bool IsOriginalAI(class<KFPawn_Monster> KFPM, optional out EAITy
 	return false;
 }
 
-public function bool IsOriginalAIBoss(class<KFPawn_Monster> KFPM, optional out EBossAIType AIType)
+public function bool IsOriginalAIBoss(class<KFPawn_Monster> KFPM, optional out EBossAIType AIType, optional E_LogLevel LogLevel = LL_None)
 {
 	local int Type;
+	
+	`Log_Trace();
 	
 	Type = AIBossClassList.Find(KFPM);
 	if (Type != INDEX_NONE)
@@ -70,16 +80,20 @@ public function bool IsOriginalAIBoss(class<KFPawn_Monster> KFPM, optional out E
 	return false;
 }
 
-public function class<KFPawn_Monster> AITypePawn(EAIType AIType)
+public function class<KFPawn_Monster> AITypePawn(EAIType AIType, E_LogLevel LogLevel)
 {
+	`Log_Trace();
+	
 	if (AIType < AIClassList.Length)
 		return AIClassList[AIType];
 	else
 		return None;
 }
 
-public function class<KFPawn_Monster> BossAITypePawn(EBossAIType AIType)
+public function class<KFPawn_Monster> BossAITypePawn(EBossAIType AIType, E_LogLevel LogLevel)
 {
+	`Log_Trace();
+	
 	if (AIType < AIBossClassList.Length)
 		return AIBossClassList[AIType];
 	else

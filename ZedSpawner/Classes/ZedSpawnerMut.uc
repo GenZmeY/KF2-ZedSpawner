@@ -5,7 +5,7 @@ var private ZedSpawner ZS;
 
 public event PreBeginPlay()
 {
-    Super.PreBeginPlay();
+	Super.PreBeginPlay();
 	
 	if (WorldInfo.NetMode == NM_Client) return;
 	
