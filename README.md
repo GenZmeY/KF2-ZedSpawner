@@ -1,7 +1,6 @@
 # ZedSpawner
 
 [![Steam Workshop](https://img.shields.io/static/v1?message=workshop&logo=steam&labelColor=gray&color=blue&logoColor=white&label=steam%20)](https://steamcommunity.com/sharedfiles/filedetails/?id=2811290931)
-[![Steam Subscriptions](https://img.shields.io/steam/subscriptions/2811290931)](https://steamcommunity.com/sharedfiles/filedetails/?id=2811290931)
 [![Steam Favorites](https://img.shields.io/steam/favorites/2811290931)](https://steamcommunity.com/sharedfiles/filedetails/?id=2811290931)
 [![Steam Update Date](https://img.shields.io/steam/update-date/2811290931)](https://steamcommunity.com/sharedfiles/filedetails/?id=2811290931)
 [![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/GenZmeY/KF2-ZedSpawner)](https://github.com/GenZmeY/KF2-ZedSpawner/tags)
