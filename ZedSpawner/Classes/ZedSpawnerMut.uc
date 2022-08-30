@@ -38,16 +38,16 @@ public function AddMutator(Mutator Mut)
 
 public function NotifyLogin(Controller C)
 {
-	Super.NotifyLogin(C);
-	
 	ZS.NotifyLogin(C);
+	
+	Super.NotifyLogin(C);
 }
 
 public function NotifyLogout(Controller C)
 {
-	Super.NotifyLogout(C);
-	
 	ZS.NotifyLogout(C);
+	
+	Super.NotifyLogout(C);
 }
 
 DefaultProperties

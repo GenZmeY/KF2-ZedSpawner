@@ -1,4 +1,4 @@
-class ZedSpawnerRepLink extends ReplicationInfo;
+class ZedSpawnerRepInfo extends ReplicationInfo;
 
 var public  ZedSpawner ZS;
 var public  E_LogLevel LogLevel;
@@ -50,7 +50,7 @@ public reliable server function ServerSync()
 	{
 		`Log_Debug("Sync finished");
 		SyncFinished();
-		if (!ZS.DestroyRepLink(Controller(Owner)))
+		if (!ZS.DestroyRepInfo(Controller(Owner)))
 		{
 			SafeDestroy();
 		}

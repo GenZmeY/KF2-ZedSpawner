@@ -64,7 +64,7 @@ var private Array<class<KFPawn_Monster> > SpawnAtPlayerStartZeds;
 var private bool   SpawnActive;
 var private String SpawnListsComment;
 
-var private Array<ZedSpawnerRepLink> RepLinks;
+var private Array<ZedSpawnerRepInfo> RepInfos;
 
 public simulated function bool SafeDestroy()
 {
@@ -83,20 +83,11 @@ public event PreBeginPlay()
 	}
 	
 	Super.PreBeginPlay();
+	
+	PreInit();
 }
 
-public event PostBeginPlay()
-{
-	`Log_Trace();
-	
-	if (bPendingDelete || bDeleteMe) return;
-	
-	Super.PostBeginPlay();
-	
-	Init();
-}
-
-private function InitConfig()
+private function PreInit()
 {
 	if (Version == `NO_CONFIG)
 	{
@@ -141,9 +132,50 @@ private function InitConfig()
 		Version = LatestVersion;
 		SaveConfig();
 	}
+	
+	if (LogLevel == LL_WrongLevel)
+	{
+		LogLevel = LL_Info;
+		`Log_Warn("Wrong 'LogLevel', return to default value");
+		SaveConfig();
+	}
+	`Log_Base("LogLevel:" @ LogLevel);
+	
+	if (Tickrate <= 0)
+	{
+		`Log_Error("Spawner tickrate must be positive (current value:" @ Tickrate $ ")");
+		`Log_Fatal("Wrong settings, Destroy...");
+		SafeDestroy();
+		return;
+	}
+	
+	dt = 1 / Tickrate;
+	`Log_Info("Spawner tickrate:" @ Tickrate @ "(update every" @ dt $ "s)");
+	
+	if (!CfgSpawn.static.Load(LogLevel))
+	{
+		`Log_Fatal("Wrong settings, Destroy...");
+		SafeDestroy();
+		return;
+	}
+
+	SpawnListRW = CfgSpawnListRW.static.Load(LogLevel);
+	SpawnListBW = CfgSpawnListBW.static.Load(LogLevel);
+	SpawnAtPlayerStartZeds = CfgSpawnAtPlayerStart.static.Load(LogLevel);
 }
 
-private function Init()
+public event PostBeginPlay()
+{
+	`Log_Trace();
+	
+	if (bPendingDelete || bDeleteMe) return;
+	
+	Super.PostBeginPlay();
+	
+	PostInit();
+}
+
+private function PostInit()
 {
 	local S_SpawnEntry SE;
 	local String CurrentMap;
@@ -159,37 +191,16 @@ private function Init()
 	}
 	
 	KFGIA = new(KFGIS) class'KFGI_Access';
-	KFGIE = KFGameInfo_Endless(KFGIS);
-	
-	InitConfig();
-
-	if (LogLevel == LL_WrongLevel)
+	if (KFGIA == None)
 	{
-		LogLevel = LL_Info;
-		`Log_Warn("Wrong 'LogLevel', return to default value");
-		SaveConfig();
-	}
-	`Log_Base("LogLevel:" @ LogLevel);
-	
-	if (Tickrate <= 0)
-	{
-		`Log_Error("Spawner tickrate must be positive (current value:" @ Tickrate $ ")");
-	}
-	
-	if (!CfgSpawn.static.Load(LogLevel) || Tickrate <= 0)
-	{
-		`Log_Fatal("Wrong settings, Destroy...");
+		`Log_Fatal("Can't create KFGI_Access object");
 		SafeDestroy();
 		return;
 	}
 	
-	dt = 1 / Tickrate;
-	`Log_Info("Spawner tickrate:" @ Tickrate @ "(update every" @ dt $ "s)");
-
-	SpawnListRW = CfgSpawnListRW.static.Load(LogLevel);
-	SpawnListBW = CfgSpawnListBW.static.Load(LogLevel);
+	KFGIE = KFGameInfo_Endless(KFGIS);
+	
 	SpawnListSW = CfgSpawnListSW.static.Load(KFGIE, LogLevel);
-	SpawnAtPlayerStartZeds = CfgSpawnAtPlayerStart.static.Load(LogLevel);
 	
 	CurrentMap = String(WorldInfo.GetPackageName());
 	GlobalSpawnAtPlayerStart = (CfgSpawnAtPlayerStart.default.Map.Find(CurrentMap) != INDEX_NONE);
@@ -756,53 +767,59 @@ public function NotifyLogin(Controller C)
 {
 	`Log_Trace();
 
-	CreateRepLink(C);
+	if (!CreateRepInfo(C))
+	{
+		`Log_Error("Can't create RepInfo for:" @ C);
+	}
 }
 
 public function NotifyLogout(Controller C)
 {
 	`Log_Trace();
 
-	DestroyRepLink(C);
+	if (!DestroyRepInfo(C))
+	{
+		`Log_Error("Can't destroy RepInfo of:" @ C);
+	}
 }
 
-public function bool CreateRepLink(Controller C)
+public function bool CreateRepInfo(Controller C)
 {
-	local ZedSpawnerRepLink RepLink;
+	local ZedSpawnerRepInfo RepInfo;
 	
 	`Log_Trace();
 	
 	if (C == None) return false;
 	
-	RepLink = Spawn(class'ZedSpawnerRepLink', C);
+	RepInfo = Spawn(class'ZedSpawnerRepInfo', C);
 	
-	if (RepLink == None) return false;
+	if (RepInfo == None) return false;
 	
-	RepLink.LogLevel = LogLevel;
-	RepLink.CustomZeds = CustomZeds;
-	RepLink.ZS = Self;
+	RepInfo.LogLevel = LogLevel;
+	RepInfo.CustomZeds = CustomZeds;
+	RepInfo.ZS = Self;
 	
-	RepLinks.AddItem(RepLink);
+	RepInfos.AddItem(RepInfo);
 	
-	RepLink.ServerSync();
+	RepInfo.ServerSync();
 	
 	return true;
 }
 
-public function bool DestroyRepLink(Controller C)
+public function bool DestroyRepInfo(Controller C)
 {
-	local ZedSpawnerRepLink RepLink;
+	local ZedSpawnerRepInfo RepInfo;
 	
 	`Log_Trace();
 	
 	if (C == None) return false;
 	
-	foreach RepLinks(RepLink)
+	foreach RepInfos(RepInfo)
 	{
-		if (RepLink.Owner == C)
+		if (RepInfo.Owner == C)
 		{
-			RepLink.SafeDestroy();
-			RepLinks.RemoveItem(RepLink);
+			RepInfo.SafeDestroy();
+			RepInfos.RemoveItem(RepInfo);
 			return true;
 		}
 	}
