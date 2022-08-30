@@ -87,7 +87,7 @@ Version=0
 
 Then start the server and check the file again - config content should be generated.
 
-📌 If the spawner's behavior differs from what you expect, check the server logs first. ZedSpawner writes in the logs everything he does (and describes why), most likely you will find an explanation of what is happening there. If not, feel free to report bugs :)
+📌 If the spawner's behavior differs from what you expect, check the server logs first. ZedSpawner writes in the logs everything it does (and describes why), most likely you will find an explanation of what is happening there. If not, feel free to report bugs :)
 
 [h1]Sources[/h1]
 [url=https://github.com/GenZmeY/KF2-ZedSpawner]https://github.com/GenZmeY/KF2-ZedSpawner[/url] (GNU GPLv3)
