@@ -815,8 +815,8 @@ public function bool DestroyRepInfo(Controller C)
 	{
 		if (RepInfo.Owner == C)
 		{
-			RepInfo.SafeDestroy();
 			RepInfos.RemoveItem(RepInfo);
+			RepInfo.SafeDestroy();
 			return true;
 		}
 	}
@@ -824,7 +824,7 @@ public function bool DestroyRepInfo(Controller C)
 	return false;
 }
 
-DefaultProperties
+defaultproperties
 {
 
 }

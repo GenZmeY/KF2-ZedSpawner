@@ -50,7 +50,7 @@ public function NotifyLogout(Controller C)
 	Super.NotifyLogout(C);
 }
 
-DefaultProperties
+defaultproperties
 {
 
 }
