@@ -1,7 +1,7 @@
 class ZedSpawner extends Info
 	config(ZedSpawner);
 
-const LatestVersion = 4;
+const LatestVersion = 5;
 
 const CfgSpawn              = class'Spawn';
 const CfgSpawnAtPlayerStart = class'SpawnAtPlayerStart';
@@ -32,6 +32,8 @@ struct S_SpawnEntry
 var private config int        Version;
 var private config E_LogLevel LogLevel;
 var private config float      Tickrate;
+var private config bool       bPreloadContentServer;
+var private config bool       bPreloadContentClient;
 
 var private float dt;
 
@@ -111,6 +113,9 @@ private function PreInit()
 			
 		case 2:
 		case 3:
+		case 4:
+			bPreloadContentServer = true;
+			bPreloadContentClient = true;
 
 		case MaxInt:
 			`Log_Info("Config updated to version"@LatestVersion);
@@ -222,7 +227,17 @@ private function PostInit()
 		CycleWaveSize = CycleWaveSize - CycleWaveShift + 1;
 	}
 	
-	PreloadContent();
+	if (bPreloadContentServer || bPreloadContentClient)
+	{
+		ExtractCustomZedsFromSpawnList(SpawnListRW, CustomZeds);
+		ExtractCustomZedsFromSpawnList(SpawnListBW, CustomZeds);
+		ExtractCustomZedsFromSpawnList(SpawnListSW, CustomZeds);
+	}
+	
+	if (bPreloadContentServer)
+	{
+		PreloadContent();
+	}
 	
 	SetTimer(dt, true, nameof(SpawnTimer));
 }
@@ -232,10 +247,6 @@ private function PreloadContent()
 	local class<KFPawn_Monster> PawnClass;
 	
 	`Log_Trace();
-	
-	ExtractCustomZedsFromSpawnList(SpawnListRW, CustomZeds);
-	ExtractCustomZedsFromSpawnList(SpawnListBW, CustomZeds);
-	ExtractCustomZedsFromSpawnList(SpawnListSW, CustomZeds);
 	
 	foreach CustomZeds(PawnClass)
 	{
@@ -766,6 +777,8 @@ private function int SpawnZed(class<KFPawn_Monster> ZedClass, int PawnCount, opt
 public function NotifyLogin(Controller C)
 {
 	`Log_Trace();
+	
+	if (!bPreloadContentClient) return;
 
 	if (!CreateRepInfo(C))
 	{
@@ -776,6 +789,8 @@ public function NotifyLogin(Controller C)
 public function NotifyLogout(Controller C)
 {
 	`Log_Trace();
+	
+	if (!bPreloadContentClient) return;
 
 	DestroyRepInfo(C);
 }
