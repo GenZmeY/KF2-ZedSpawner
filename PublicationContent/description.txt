@@ -50,6 +50,9 @@ Version=0[/b]
 Unfortunately I can't do anything about it because it's a game problem (not mutator). I hope TWI fixes this someday.
 
 [h1]Setup (KFZedSpawner.ini)[/h1]
+[b]bPreloadContentServer[/b] - enable/disable server-side preload content;
+[b]bPreloadContentClient[/b] - enable/disable client-side preload content;
+
 [b]Cyclic spawn[/b]
 If you don't want to write an endless spawn list for the endless mode (lol) use a cyclic spawn. Set parameter [b]bCyclicalSpawn=True[/b]
 After the last wave in the spawn list ends, spawn will start again from the beginning of the list.
