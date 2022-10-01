@@ -17,7 +17,7 @@ No. This mod is not whitelisted and will de-rank your server. Any XP gained will
 [olist]
 [*]Subscribe to this mutator;
 [*]Start KF2; 
-[*]Open console (`) and input:
+[*]Open console (~) and input:
 [b]open KF-BioticsLab?Mutator=ZedSpawner.ZedSpawnerMut[/b]
 (replace the map and add the parameters you need)
 [*]<Enter>.
@@ -36,9 +36,20 @@ No. This mod is not whitelisted and will de-rank your server. Any XP gained will
 [*]Add mutator to server start parameters: [b]?Mutator=ZedSpawner.ZedSpawnerMut[/b] and restart the server.
 [/olist]
 
-[h1]Setup[/h1]
-At the first start, the [b]KFZedSpawner.ini[/b] config will be created(*). There are already default settings and spawn lists, but you still need to change them because this is just an example.
+[h1]Important setup information[/h1]
+The config should be created on first start, but now the game contains a bug that initializes the config values ​​randomly if they are not explicitly set. Thus, the config may have incorrect values ​​or not be created at all.
+So if you are using this mutator for the first time, I highly recommend doing the following:
+[olist]
+[*]Create (modify) [b]KFZedSpawner.ini[/b] manually. Put the following content there:
+[b][ZedSpawner.ZedSpawner]
+Version=0[/b]
+[*]Start the game/server with ZedSpawner to generate the contents of the config.
+[*]Close the game/server.
+[/olist]
+[b]Right now this is the only way to correctly create the default config.[/b]
+Unfortunately I can't do anything about it because it's a game problem (not mutator). I hope TWI fixes this someday.
 
+[h1]Setup (KFZedSpawner.ini)[/h1]
 [b]Cyclic spawn[/b]
 If you don't want to write an endless spawn list for the endless mode (lol) use a cyclic spawn. Set parameter [b]bCyclicalSpawn=True[/b]
 After the last wave in the spawn list ends, spawn will start again from the beginning of the list.
@@ -78,15 +89,6 @@ I really tried to describe in text how it works, but every time I got some kind 
 [h1]Notes[/h1]
 📌 Mutator does not contain custom zeds. You must have the required zeds in your subscriptions to be able to spawn them.
 📌 If you are using this mutator to add zeds, you should [b]not[/b] use mutators from zed packs (just having them in subscriptions is enough).
-
-[h1]Troubleshooting[/h1]
-📌 [b](*)[/b] If your config is not created for some reason, create it manually with the following content:
-[b][ZedSpawner.ZedSpawner]
-Version=0
-[/b]
-
-Then start the server and check the file again - config content should be generated.
-
 📌 If the spawner's behavior differs from what you expect, check the server logs first. ZedSpawner writes in the logs everything it does (and describes why), most likely you will find an explanation of what is happening there. If not, feel free to report bugs :)
 
 [h1]Sources[/h1]
