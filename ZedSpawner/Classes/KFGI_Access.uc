@@ -5,12 +5,12 @@ public function Array<class<KFPawn_Monster> > GetAIClassList(E_LogLevel LogLevel
 {
 	local Array<class<KFPawn_Monster> > RV;
 	local class<KFPawn_Monster> KFPMC;
-	
+
 	`Log_Trace();
-	
+
 	foreach AIClassList(KFPMC)
 		RV.AddItem(KFPMC);
-		
+
 	return RV;
 }
 
@@ -18,12 +18,12 @@ public function Array<class<KFPawn_Monster> > GetNonSpawnAIClassList(E_LogLevel 
 {
 	local Array<class<KFPawn_Monster> > RV;
 	local class<KFPawn_Monster> KFPMC;
-	
+
 	`Log_Trace();
-	
+
 	foreach NonSpawnAIClassList(KFPMC)
 		RV.AddItem(KFPMC);
-		
+
 	return RV;
 }
 
@@ -31,12 +31,12 @@ public function Array<class<KFPawn_Monster> > GetAIBossClassList(E_LogLevel LogL
 {
 	local Array<class<KFPawn_Monster> > RV;
 	local class<KFPawn_Monster> KFPMC;
-	
+
 	`Log_Trace();
-	
+
 	foreach AIBossClassList(KFPMC)
 		RV.AddItem(KFPMC);
-		
+
 	return RV;
 }
 
@@ -51,39 +51,39 @@ public function bool IsCustomZed(class<KFPawn_Monster> KFPM, E_LogLevel LogLevel
 public function bool IsOriginalAI(class<KFPawn_Monster> KFPM, optional out EAIType AIType, optional E_LogLevel LogLevel = LL_None)
 {
 	local int Type;
-	
+
 	`Log_Trace();
-	
+
 	Type = AIClassList.Find(KFPM);
 	if (Type != INDEX_NONE)
 	{
 		AIType = EAIType(Type);
 		return true;
 	}
-	
+
 	return false;
 }
 
 public function bool IsOriginalAIBoss(class<KFPawn_Monster> KFPM, optional out EBossAIType AIType, optional E_LogLevel LogLevel = LL_None)
 {
 	local int Type;
-	
+
 	`Log_Trace();
-	
+
 	Type = AIBossClassList.Find(KFPM);
 	if (Type != INDEX_NONE)
 	{
 		AIType = EBossAIType(Type);
 		return true;
 	}
-	
+
 	return false;
 }
 
 public function class<KFPawn_Monster> AITypePawn(EAIType AIType, E_LogLevel LogLevel)
 {
 	`Log_Trace();
-	
+
 	if (AIType < AIClassList.Length)
 		return AIClassList[AIType];
 	else
@@ -93,7 +93,7 @@ public function class<KFPawn_Monster> AITypePawn(EAIType AIType, E_LogLevel LogL
 public function class<KFPawn_Monster> BossAITypePawn(EBossAIType AIType, E_LogLevel LogLevel)
 {
 	`Log_Trace();
-	
+
 	if (AIType < AIBossClassList.Length)
 		return AIBossClassList[AIType];
 	else
@@ -102,5 +102,5 @@ public function class<KFPawn_Monster> BossAITypePawn(EBossAIType AIType, E_LogLe
 
 defaultproperties
 {
-	
+
 }
