@@ -3,6 +3,11 @@ class ZedSpawnerMut extends KFMutator
 
 var private ZedSpawner ZS;
 
+public simulated function bool SafeDestroy()
+{
+	return (bPendingDelete || bDeleteMe || Destroy());
+}
+
 public event PreBeginPlay()
 {
 	Super.PreBeginPlay();
@@ -22,7 +27,7 @@ public event PreBeginPlay()
 	if (ZS == None)
 	{
 		`Log_Base("FATAL: Can't Spawn 'ZedSpawner'");
-		Destroy();
+		SafeDestroy();
 	}
 }
 
@@ -31,7 +36,7 @@ public function AddMutator(Mutator Mut)
 	if (Mut == Self) return;
 
 	if (Mut.Class == Class)
-		Mut.Destroy();
+		ZedSpawnerMut(Mut).SafeDestroy();
 	else
 		Super.AddMutator(Mut);
 }
