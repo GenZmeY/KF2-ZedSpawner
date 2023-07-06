@@ -255,7 +255,7 @@ private function PreloadContent()
 	}
 }
 
-private function ExtractCustomZedsFromSpawnList(Array<S_SpawnEntry> SpawnList, out Array<class<KFPawn_Monster> > Out)
+private function ExtractCustomZedsFromSpawnList(const out Array<S_SpawnEntry> SpawnList, out Array<class<KFPawn_Monster> > Out)
 {
 	local S_SpawnEntry SE;
 
@@ -279,7 +279,7 @@ private function SpawnTimer()
 
 	`Log_Trace();
 
-	if (KFGIS.WaveNum != 0 && CurrentWave < KFGIS.WaveNum)
+	if (KFGIS.WaveNum != 0 && CurrentWave != KFGIS.WaveNum)
 	{
 		SetupWave();
 	}
