@@ -279,7 +279,7 @@ private function SpawnTimer()
 
 	`Log_Trace();
 
-	if (KFGIS.WaveNum != 0 && CurrentWave < KFGIS.WaveNum)
+	if (KFGIS.WaveNum != 0 && CurrentWave != KFGIS.WaveNum)
 	{
 		SetupWave();
 	}
