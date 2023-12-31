@@ -86,7 +86,10 @@ Use the [b][ZedSpawner.SpawnListBossWaves][/b] and [b][ZedSpawner.SpawnListSpeci
 [h1]Spawn logic[/h1]
 I really tried to describe in text how it works, but every time I got some kind of crap. Therefore, I decided to explain it a little differently and made a small calculator for this. It is interactive, you can change the parameters and see what happens. It has all the necessary explanations, so I think you will quickly figure out how the spawner works.
 
-[url=https://redirect.genzmey.su/kf2-zedspawner-calc][img]https://img.shields.io/static/v1?message=Spawn%20Calculator&logo=Google%20Sheets&labelColor=34A853&color=gray&logoColor=white&label=Google%20Sheets%20[/img][/url]
+[b]Link (remove spaces):[/b]
+[code]
+htt ps://docs .google .com/spreadsheets/d/1q67WJ36jhj6Y0lPNO5tS2bU79Wphu4Xmi62me6DAwtM/edit?usp=drive_link
+[/code]
 [i]Just please try not to interfere with each other if you see that someone is already using a calculator.[/i]
 
 [h1]Notes[/h1]
