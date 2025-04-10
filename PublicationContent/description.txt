@@ -1,69 +1,75 @@
 [img]https://img.shields.io/static/v1?logo=GitHub&labelColor=gray&color=blue&logoColor=white&label=&message=Open Source[/img] [img]https://img.shields.io/github/license/GenZmeY/KF2-ZedSpawner[/img] [img]https://img.shields.io/steam/favorites/2811290931[/img] [img]https://img.shields.io/steam/update-date/2811290931[/img] [url=https://steamcommunity.com/sharedfiles/filedetails/changelog/2811290931][img]https://img.shields.io/github/v/tag/GenZmeY/KF2-ZedSpawner[/img][/url]
 
-[h1]Description[/h1]
-Spawner for zeds. Started as a modification of [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2488241348]this version[/url], but now there is almost nothing left of the previous mutator, lol xD
+[h1]📋 Description[/h1]
+Spawner for zeds.
 
-[h1]Features[/h1]
-- spawn without increasing zed counter;
-- spawn depends on the number of players;
-- cyclic spawn (useful for endless mode);
-- separate spawn for special waves and boss waves;
-- spawn after a certain percentage of killed zeds.
+This mutator uses the same method of spawning zeds by timer as in [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2488241348]Custom Zed Spawn Mutator[/url]. But the implementation is completely new.
 
-[h1]Whitelisted?[/h1]
-No. This mod is not whitelisted and will de-rank your server. Any XP gained will not be saved.
+[h1]✨ Features[/h1]
+[list]
+[*]Spawn without increasing zed counter
+[*]Spawn depends on the number of players
+[*]Cyclic spawn (useful for endless mode)
+[*]Separate spawn for special waves and boss waves
+[*]Spawn after a certain percentage of killed zeds
+[/list]
 
-[h1]Usage (single player)[/h1]
+[h1]❌ Whitelisted?[/h1]
+No. This mod is not whitelisted and will de-rank your server. Any XP earned will not be saved.
+
+[h1]🎮 Usage (single player)[/h1]
 [olist]
-[*]Subscribe to this mutator;
-[*]Start KF2;
-[*]Open console (~) and input:
-[b]open KF-BioticsLab?Mutator=ZedSpawner.Mut[/b]
-(replace the map and add the parameters you need)
-[*]<Enter>.
+[*]Subscribe to this mutator.
+[*]Create a file:
+[code]C:\Users\<username>\Documents\My Games\KillingFloor2\KFGame\Config\KFZedSpawner.ini[/code]
+with content:
+[code][ZedSpawner.ZedSpawner]
+Version=0[/code]
+[*]Launch KF2.
+[*]Open console (~) and start any map with the mutator (this will generate the default KFZedSpawner.ini content):
+[code]open KF-BioticsLab?Mutator=ZedSpawner.Mut[/code]
+[*]Close the game and configure the mutator (see [b]⚙️ Setup (KFZedSpawner.ini)[/b] below).
+[*]Launch KF2 again, open the console, and start the game:
+[code]open KF-BioticsLab?Game=KFGameContent.KFGameInfo_Endless?Difficulty=3?GameLength=2?Mutator=ZedSpawner.Mut[/code]
+(replace the map and set/add parameters you need).
 [/olist]
 
-[h1]Usage (server)[/h1]
-[b]Note:[/b] [i]If you don't understand what is written here, read the article [url=https://wiki.killingfloor2.com/index.php?title=Dedicated_Server_(Killing_Floor_2)][u]Dedicated Server (KF2 wiki)[/u][/url] before following these instructions.[/i]
+[h1]🖥️ Usage (server)[/h1]
+[b]Note:[/b] [i]If this is unclear, first read: [url=https://wiki.killingfloor2.com/index.php?title=Dedicated_Server_(Killing_Floor_2)][u]Dedicated Server Guide (KF2 wiki)[/u][/url][/i]
 [olist]
-[*]Open your [b]PCServer-KFEngine.ini[/b] / [b]LinuxServer-KFEngine.ini[/b];
-[*]Find the [b][IpDrv.TcpNetDriver][/b] section and make sure that there is a line (add if not):
-[b]DownloadManagers=OnlineSubsystemSteamworks.SteamWorkshopDownload[/b]
-❗️ If there are several [b]DownloadManagers=[/b] then the line above should be the first ❗️
+[*]Open [b]PCServer-KFEngine.ini[/b] / [b]LinuxServer-KFEngine.ini[/b].
+[*]Find [b][IpDrv.TcpNetDriver][/b] section and ensure line exists (add if missing):
+[code]DownloadManagers=OnlineSubsystemSteamworks.SteamWorkshopDownload[/code]
+(If there are several [b]DownloadManagers[/b] then the line above should be the first)
 [*]Add the following string to the [b][OnlineSubsystemSteamworks.KFWorkshopSteamworks][/b] section (create one if it doesn't exist):
-[b]ServerSubscribedWorkshopItems=2811290931[/b]
-[*]Start the server and wait while the mutator is downloading;
-[*]Add mutator to server start parameters: [b]?Mutator=ZedSpawner.Mut[/b] and restart the server.
+[code]ServerSubscribedWorkshopItems=2811290931[/code]
+[*]Start server and wait for mutator download.
+[*]When the download is complete, stop the server.
+[*]Create a file:
+[code]<kf2-server>\KFGame\Config\KFZedSpawner.ini[/code]
+with content:
+[code][ZedSpawner.ZedSpawner]
+Version=0[/code]
+[*]Add mutator to server start parameters: [code]?Mutator=ZedSpawner.Mut[/code] and start the server (this will generate the default KFZedSpawner.ini content).
+[*]Stop the server and configure the mutator (see [b]⚙️ Setup (KFZedSpawner.ini)[/b] below).
+[*]Start the server.
 [/olist]
 
-[h1]Important setup information[/h1]
-The config should be created on first start, but now the game contains a bug that initializes the config values ​​randomly if they are not explicitly set. Thus, the config may have incorrect values ​​or not be created at all.
-So if you are using this mutator for the first time, I highly recommend doing the following:
-[olist]
-[*]Create (modify) [b]KFZedSpawner.ini[/b] manually. Put the following content there:
-[b][ZedSpawner.ZedSpawner]
-Version=0[/b]
-[*]Start the game/server with ZedSpawner to generate the contents of the config.
-[*]Close the game/server.
-[/olist]
-[b]Right now this is the only way to correctly create the default config.[/b]
-Unfortunately I can't do anything about it because it's a game problem (not mutator). I hope TWI fixes this someday.
-
-[h1]Setup (KFZedSpawner.ini)[/h1]
-[b]bPreloadContentServer[/b] - enable/disable server-side preload content;
-[b]bPreloadContentClient[/b] - enable/disable client-side preload content;
+[h1]⚙️ Setup (KFZedSpawner.ini)[/h1]
+[b]bPreloadContentServer[/b] - Enable/Disable server-side preload content.
+[b]bPreloadContentClient[/b] - Enable/Disable client-side preload content.
 
 [b]Cyclic spawn[/b]
-If you don't want to write an endless spawn list for the endless mode (lol) use a cyclic spawn. Set parameter [b]bCyclicalSpawn=True[/b]
+If you don't want to write an endless spawn list for the endless mode (😁) use a cyclic spawn. Set parameter [b]bCyclicalSpawn=True[/b]
 After the last wave in the spawn list ends, spawn will start again from the beginning of the list.
-Using the [b]SpawnTotalCycleMultiplier[/b] and [b]SingleSpawnLimitCycleMultiplier[/b] modifiers will allow you to adjust the difficulty of the following cycles.
+Use the [b]SpawnTotalCycleMultiplier[/b] and [b]SingleSpawnLimitCycleMultiplier[/b] modifiers to adjust the difficulty of the following cycles.
 
 [b]Shadow spawn[/b]
 With [b]bShadowSpawn=True[/b], the zeds from the list will replace the original zeds that haven't spawned yet, so the counter of the remaining zeds won't grow. Spawning will stop when there are no unspawned zeds left.
 With [b]bShadowSpawn=False[/b] zeds from the spawn list will not replace the original ones. The counter of remaining zeds will increase when spawning. Spawn will continue until the end of the wave.
 
 [b]Smooth spawn[/b]
-With [b]bSmoothSpawn=True[/b] a group of zeds will spawn gradually (1 zed per second);
+With [b]bSmoothSpawn=True[/b] a group of zeds will spawn gradually (1 zed per second).
 
 [b]AliveSpawnLimit[/b]
 If you have a server crash with a large number of zeds, set [b]AliveSpawnLimit[/b]. If the number of live zeds reaches the specified limit, spawning will be stopped until there are fewer zeds. At zero there is no limit.
@@ -74,7 +80,7 @@ Use the [b][ZedSpawner.SpawnListBossWaves][/b] and [b][ZedSpawner.SpawnListSpeci
 
 [b]Spawn entry parameters[/b]
 [list]
-[*][b]Wave / BossClass[/b] - what wave is the spawn for. Wave number for the regular list, wave type for the special list; boss class for the boss list.
+[*][b]Wave / BossClass[/b] - what wave is the spawn for. Wave number for the regular list, wave type for the special list. boss class for the boss list.
 [*][b]ZedClass[/b] - the class of the zed you want to spawn (for example: ZedternalReborn.WMPawn_ZedScrake_Omega).
 [*][b]RelativeStart[/b] - allows you to start spawning a zed not on a timer, but after killing the specified percentage of zeds. If set to zero, spawn will start after [b]Delay[/b] seconds from the start of the wave. Note that [b]RelativeStart[/b] does not work on bosses.
 [*][b]Delay[/b] - time in seconds between spawns.
@@ -83,19 +89,29 @@ Use the [b][ZedSpawner.SpawnListBossWaves][/b] and [b][ZedSpawner.SpawnListSpeci
 [*][b]SingleSpawnLimit[/b] - maximum number of zeds for one spawn. Can be adjusted by modifiers, number of players and cycle number.
 [/list]
 
-[h1]Spawn logic[/h1]
+[h1]🔬 Spawn logic[/h1]
 I really tried to describe in text how it works, but every time I got some kind of crap. Therefore, I decided to explain it a little differently and made a small calculator for this. It is interactive, you can change the parameters and see what happens. It has all the necessary explanations, so I think you will quickly figure out how the spawner works.
 
 [b]Link (remove spaces):[/b]
-[code]
-htt ps://docs .google .com/spreadsheets/d/1q67WJ36jhj6Y0lPNO5tS2bU79Wphu4Xmi62me6DAwtM/edit?usp=drive_link
-[/code]
-[i]Just please try not to interfere with each other if you see that someone is already using a calculator.[/i]
+[code]htt ps://docs .google .com/spreadsheets/d/1q67WJ36jhj6Y0lPNO5tS2bU79Wphu4Xmi62me6DAwtM/edit?usp=drive_link[/code]
+[list]
+[*]Please try not to interfere with each other if you see that someone is already using a calculator.
+[*]If some villain broke the calculator - let me know in the comments, I'll roll it back to its previous state.
+[/list]
 
-[h1]Notes[/h1]
-📌 Mutator does not contain custom zeds. You must have the required zeds in your subscriptions to be able to spawn them.
-📌 If you are using this mutator to add zeds, you should [b]not[/b] use mutators from zed packs (just having them in subscriptions is enough).
-📌 If the spawner's behavior differs from what you expect, check the server logs first. ZedSpawner writes in the logs everything it does (and describes why), most likely you will find an explanation of what is happening there. If not, feel free to report bugs :)
+[h1]📌 Notes[/h1]
+[list]
+[*]Mutator does not contain custom zeds. You must have the required zeds in your subscriptions to be able to spawn them.
+[*]If you are using this mutator to add zeds, you should [b]not[/b] use mutators from zed packs (just having them in subscriptions is enough).
+[*]If the spawner's behavior differs from what you expect, check the server logs first. ZedSpawner writes in the logs everything it does (and describes why), most likely you will find an explanation of what is happening.
+[/list]
 
-[h1]Sources[/h1]
-[url=https://github.com/GenZmeY/KF2-ZedSpawner]https://github.com/GenZmeY/KF2-ZedSpawner[/url] (GNU GPLv3)
+[h1]🌍 Credits[/h1]
+[list][*][url=https://steamcommunity.com/profiles/76561198071961495]Windows11[/url] - Custom Zed Spawn Mutator.[*]The cat on the cover is Meawbin (original character by [url=https://x.com/horrormove]Cotton Valent[/url]).[/list]
+
+[h1]☑️ Status: Completed[/h1]
+✔️ The mutator works with the current version of the game (v1150) and I have implemented everything I planned.
+⛔️ Development has stopped: I no longer have the time or motivation to maintain this mod. No further updates or bug fixes are planned.
+
+[h1]📜 Sources[/h1]
+https://github.com/GenZmeY/KF2-ZedSpawner [b](GNU GPLv3)[/b]
