@@ -3,7 +3,7 @@
 [h1]📋 Description[/h1]
 Spawner for zeds.
 
-This mutator uses the same method of spawning zeds by timer as in [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2488241348]Custom Zed Spawn Mutator[/url]. But the implementation is completely new.
+This mutator uses the same method of spawning zeds by timer as in [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2488241348]Custom Zed Spawn Mutator[/url], but the implementation is completely new.
 
 [h1]✨ Features[/h1]
 [list]
@@ -114,4 +114,4 @@ I really tried to describe in text how it works, but every time I got some kind 
 ⛔️ Development has stopped: I no longer have the time or motivation to maintain this mod. No further updates or bug fixes are planned.
 
 [h1]📜 Sources[/h1]
-https://github.com/GenZmeY/KF2-ZedSpawner [b](GNU GPLv3)[/b]
+https://github.com/GenZmeY/KF2-ZedSpawner [b](GPL-3.0-or-later)[/b]
